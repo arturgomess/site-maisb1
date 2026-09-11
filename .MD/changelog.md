@@ -1,5 +1,11 @@
 # Changelog
 
+- **Otimização Global de Mídias (-127 MB), Controles de Vídeo em Tela Cheia e Suporte HTTP 206 Range (11/09/2026)**:
+  - **Redução Drástica de Tamanho do Projeto (-126.6 MB)**: O repositório e o projeto foram enxugados de 157.5 MB para apenas 30.8 MB. Foram eliminados mais de 90 arquivos obsoletos (vídeos duplicados/pesados, zips de backup, mockups de design não utilizados e scripts legados).
+  - **Conversão Completa para WebP**: Todas as fotografias e ícones restantes foram convertidos para formato WebP de alta fidelidade e compressão otimizada.
+  - **Controles de Vídeo em Tela Cheia (`InstitutionalVideoHero`)**: Implementada interface em tela cheia com auto-hide inteligente ao ficar inativo (~2,6s) e reaparecimento instantâneo ao movimentar o mouse. Barra de progresso ultra-minimalista em amarelo vibrante (`#ffc400`) com suporte a clique e arraste (*scrubbing* via Pointer Capture).
+  - **Suporte a Byte-Range Requests (HTTP 206 Partial Content)**: Atualizado o manipulador de rota estática (`app/assets/[...path]/route.ts`) com suporte nativo a cabeçalho `Range`, `Accept-Ranges: bytes` e respostas 206. Isso desbloqueou o avanço e retrocesso instantâneo de mídia em qualquer navegador.
+
 - **Página de Política de Privacidade & Termos de Uso (/termos-e-privacidade) e Faxina dos HTMLs Legados (04/09/2026)**:
   - **Criação da Rota Nativa em Next.js (`app/termos-e-privacidade/page.tsx`)**: Rota estruturada no padrão Next.js 15, herdando `SiteHeader` e `SiteFooter`, com metadados completos de SEO e conformidade com a LGPD (Lei nº 13.709/2018).
   - **Design System e Estilo Dedicado (`src/css/legal.css`)**: Hero institucional Dark Glow (`#120E0E` e `#C89223`), Breadcrumb interativo, Badge de conformidade, Card Central Clean (`#FFFFFF`) para leitura agradável e botão funcional de impressão (`components/print-button.tsx`) com folha de estilo `@media print` pronta para PDF.
