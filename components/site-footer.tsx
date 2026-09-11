@@ -481,7 +481,7 @@ export function SiteFooter() {
               <a href="https://idedigital.com.br" target="_blank" rel="noopener noreferrer" aria-label="ide digital">
                 {/* eslint-disable-next-line @next/next/no-img-element */}
                 <img
-                  src={asset('01-logoh-pb-white-mono-ide-digital-negativo-png.png')}
+                  src={asset('01-logoh-pb-white-mono-ide-digital-negativo-png.webp')}
                   alt="ide digital"
                   className="idedigital-logo-img"
                 />

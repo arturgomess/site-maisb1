@@ -14,7 +14,7 @@ const posts = [
     status: 'published',
     seoTitle: 'Grupo Mais Barato celebra 10 anos no varejo paraense',
     seoDescription: 'Grupo Mais Barato celebra uma década de expansão, inovação e compromisso com Belém e com o varejo paraense.',
-    imagePath: '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.png',
+    imagePath: '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp',
     imageAlt: 'Equipe do Grupo Mais Barato em frente à unidade',
     imageCaption: 'Fachada e equipe do Grupo Mais Barato',
   },

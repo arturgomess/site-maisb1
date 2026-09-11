@@ -52,7 +52,7 @@ export function ArticleView({ article, related }: { article: NewsArticle; relate
           </header>
           <figure className="article-cover-wrapper">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.png'} alt={article.title} />
+            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp'} alt={article.title} />
             <figcaption className="article-cover-caption">Fachada e equipe do Grupo Mais Barato</figcaption>
           </figure>
           <div className="article-content-body">

@@ -68,11 +68,11 @@ export function SiteHeader() {
           <a id="menu-link-marcas" href="/#marcas" className="drop-link" aria-haspopup="true" aria-label="Nossas Marcas e submenu" onClick={() => setMenuOpen(false)}>Nossas Marcas</a>
           <div className="drop-panel" aria-label="Submenu Nossas Marcas">
             {[
-              ['icon-b-supermercadoo.png', '+B Supermercados', 'super'],
-              ['icon-b-farmaa.png', '+B Farma', 'farma'],
-              ['icon-vila-plaza.png', 'Villa Plaza', 'plaza'],
-              ['icon-vila-plaza.png', 'Villa Plaza Park', 'park'],
-              ['icon-the-winee.png', 'The Wine Experience', 'wine'],
+              ['icon-b-supermercadoo.webp', '+B Supermercados', 'super'],
+              ['icon-b-farmaa.webp', '+B Farma', 'farma'],
+              ['icon-vila-plaza.webp', 'Villa Plaza', 'plaza'],
+              ['icon-vila-plaza.webp', 'Villa Plaza Park', 'park'],
+              ['icon-the-winee.webp', 'The Wine Experience', 'wine'],
             ].map(([logo, label, id]) => (
               <a id={`menu-link-${id}`} href={`/#marca-${id}`} className={`dropdown-item-rich brand-${id}`} key={id} onClick={() => setMenuOpen(false)}>
                 <span className="dropdown-item-logo">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={asset(`Icones Submarcas/${logo}`)} alt={label} /></span>

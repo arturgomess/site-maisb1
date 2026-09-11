@@ -15,64 +15,217 @@ export function HomeHero() {
 export function InstitutionalVideoHero() {
   const videoRef = useRef<HTMLVideoElement>(null);
   const sectionRef = useRef<HTMLElement>(null);
+  const trackRef = useRef<HTMLDivElement>(null);
+  const isDraggingRef = useRef(false);
+
   const [muted, setMuted] = useState(true);
   const [fullscreen, setFullscreen] = useState(false);
   const [progress, setProgress] = useState(0);
+  const [controlsVisible, setControlsVisible] = useState(true);
+  const hideTimerRef = useRef<NodeJS.Timeout | null>(null);
+
+  const resetHideTimer = (delay = 2600) => {
+    setControlsVisible(true);
+    if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    if (fullscreen) {
+      hideTimerRef.current = setTimeout(() => {
+        if (!isDraggingRef.current) {
+          setControlsVisible(false);
+        }
+      }, delay);
+    }
+  };
 
   useEffect(() => {
     const video = videoRef.current;
     if (!video) return;
-    const onTimeUpdate = () => setProgress(video.duration ? (video.currentTime / video.duration) * 100 : 0);
-    const onFullscreenChange = () => setFullscreen(document.fullscreenElement === sectionRef.current);
+
+    const onTimeUpdate = () => {
+      if (!isDraggingRef.current && video.duration) {
+        setProgress((video.currentTime / video.duration) * 100);
+      }
+    };
+
+    const onFullscreenChange = () => {
+      const isFs = Boolean(
+        document.fullscreenElement === sectionRef.current ||
+        (document as unknown as { webkitFullscreenElement?: Element }).webkitFullscreenElement === sectionRef.current
+      );
+      setFullscreen(isFs);
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      if (isFs) {
+        hideTimerRef.current = setTimeout(() => {
+          setControlsVisible(false);
+        }, 3000);
+      }
+    };
+
     video.addEventListener('timeupdate', onTimeUpdate);
     document.addEventListener('fullscreenchange', onFullscreenChange);
+    document.addEventListener('webkitfullscreenchange', onFullscreenChange);
+
     return () => {
       video.removeEventListener('timeupdate', onTimeUpdate);
       document.removeEventListener('fullscreenchange', onFullscreenChange);
+      document.removeEventListener('webkitfullscreenchange', onFullscreenChange);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
     };
-  }, []);
+  }, [fullscreen]);
+
+  // Listener para mousemove quando estiver em tela cheia: se mexer o mouse, reaparece
+  useEffect(() => {
+    if (!fullscreen) {
+      setControlsVisible(true);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+      return;
+    }
+
+    const onMouseMove = (e: MouseEvent) => {
+      const isNearBottom = e.clientY > window.innerHeight - 160;
+      resetHideTimer(isNearBottom ? 4000 : 2600);
+    };
+
+    window.addEventListener('mousemove', onMouseMove);
+    return () => {
+      window.removeEventListener('mousemove', onMouseMove);
+      if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+    };
+  }, [fullscreen]);
 
   const toggleMute = () => {
     const video = videoRef.current;
     if (!video) return;
     video.muted = !video.muted;
     setMuted(video.muted);
+    resetHideTimer();
   };
 
   const toggleFullscreen = () => {
     const section = sectionRef.current;
     if (!section) return;
-    if (document.fullscreenElement) void document.exitFullscreen();
-    else void section.requestFullscreen?.();
+    const doc = document as unknown as {
+      fullscreenElement?: Element;
+      webkitFullscreenElement?: Element;
+      exitFullscreen?: () => Promise<void>;
+      webkitExitFullscreen?: () => void;
+    };
+    const sec = section as unknown as {
+      requestFullscreen?: () => Promise<void>;
+      webkitRequestFullscreen?: () => void;
+    };
+
+    if (doc.fullscreenElement || doc.webkitFullscreenElement) {
+      if (doc.exitFullscreen) void doc.exitFullscreen();
+      else if (doc.webkitExitFullscreen) doc.webkitExitFullscreen();
+    } else {
+      if (sec.requestFullscreen) void sec.requestFullscreen();
+      else if (sec.webkitRequestFullscreen) sec.webkitRequestFullscreen();
+    }
   };
 
-  const seek = (event: React.MouseEvent<HTMLDivElement>) => {
+  const seekFromClientX = (clientX: number) => {
     const video = videoRef.current;
-    if (!video || !video.duration) return;
-    const rect = event.currentTarget.getBoundingClientRect();
-    video.currentTime = ((event.clientX - rect.left) / rect.width) * video.duration;
+    const track = trackRef.current;
+    if (!video || !track) return;
+    const duration = video.duration;
+    if (!duration || isNaN(duration) || !isFinite(duration)) return;
+
+    const rect = track.getBoundingClientRect();
+    if (rect.width <= 0) return;
+
+    const clickX = Math.max(0, Math.min(clientX - rect.left, rect.width));
+    const pct = clickX / rect.width;
+    const targetTime = pct * duration;
+
+    video.currentTime = targetTime;
+    setProgress(pct * 100);
   };
 
-  return <section className="video-hero-section wf-section" ref={sectionRef}>
-    <video id="inst-video" ref={videoRef} autoPlay loop muted playsInline poster={asset('Videos/video-b-home-poster.webp')}>
-      <source src={asset('Videos/Supermercado Mais B - Institucional.mp4')} type="video/mp4" />
-    </video>
-    <div className="video-overlay" />
-    <div className="video-hero-content visually-hidden"><span className="slide-eyebrow">SOBRE O GRUPO</span><h1>Grupo Mais Barato</h1></div>
-    <div className="video-hero-controls" aria-label="Controles do vídeo institucional">
-      <div className="video-progress-container" id="video-progress-container" onClick={seek} role="slider" aria-label="Progresso do vídeo" aria-valuenow={Math.round(progress)} aria-valuemin={0} aria-valuemax={100} tabIndex={0}>
-        <div className="video-progress-track"><div className="video-progress-bar" style={{ width: `${progress}%` }} /></div>
+  const handlePointerDown = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (e.button !== 0 && e.pointerType === 'mouse') return;
+    isDraggingRef.current = true;
+    try {
+      e.currentTarget.setPointerCapture(e.pointerId);
+    } catch {}
+    seekFromClientX(e.clientX);
+    resetHideTimer(5000);
+  };
+
+  const handlePointerMove = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (!isDraggingRef.current) return;
+    seekFromClientX(e.clientX);
+    resetHideTimer(5000);
+  };
+
+  const handlePointerUp = (e: React.PointerEvent<HTMLDivElement>) => {
+    if (isDraggingRef.current) {
+      isDraggingRef.current = false;
+      try {
+        e.currentTarget.releasePointerCapture(e.pointerId);
+      } catch {}
+      seekFromClientX(e.clientX);
+      resetHideTimer();
+    }
+  };
+
+  const isControlsShown = !fullscreen || controlsVisible;
+
+  return (
+    <section
+      className={`video-hero-section wf-section ${fullscreen ? 'is-fullscreen' : ''} ${fullscreen && !controlsVisible ? 'hide-cursor' : ''}`}
+      ref={sectionRef}
+      onMouseMove={() => resetHideTimer()}
+    >
+      <video id="inst-video" ref={videoRef} autoPlay loop muted playsInline poster={asset('Videos/video-b-home-poster.webp')}>
+        <source src={asset('Videos/Supermercado Mais B - Institucional.mp4')} type="video/mp4" />
+      </video>
+      <div className="video-overlay" />
+      <div className="video-hero-content visually-hidden"><span className="slide-eyebrow">SOBRE O GRUPO</span><h1>Grupo Mais Barato</h1></div>
+      <div
+        className={`video-hero-controls ${isControlsShown ? 'fs-visible' : ''}`}
+        aria-label="Controles do vídeo institucional"
+        onMouseEnter={() => {
+          if (hideTimerRef.current) clearTimeout(hideTimerRef.current);
+          setControlsVisible(true);
+        }}
+        onMouseLeave={() => {
+          if (fullscreen && !isDraggingRef.current) resetHideTimer(1800);
+        }}
+      >
+        <div
+          className={`video-progress-container ${isControlsShown ? 'fs-visible' : ''}`}
+          id="video-progress-container"
+          onPointerDown={handlePointerDown}
+          onPointerMove={handlePointerMove}
+          onPointerUp={handlePointerUp}
+          onPointerCancel={handlePointerUp}
+          role="slider"
+          aria-label="Progresso do vídeo"
+          aria-valuenow={Math.round(progress)}
+          aria-valuemin={0}
+          aria-valuemax={100}
+          tabIndex={0}
+        >
+          <div className="video-progress-track" ref={trackRef}>
+            <div className="video-progress-bar" style={{ width: `${progress}%` }} />
+          </div>
+        </div>
+        <div className={`video-controls-right ${isControlsShown ? 'fs-visible' : ''}`}>
+          <button id="video-mute-toggle" type="button" className="video-mute-btn" onClick={toggleMute} aria-label={muted ? 'Desmutar vídeo' : 'Mutar vídeo'}>
+            {muted ? <VolumeX size={22} aria-hidden="true" /> : <Volume2 size={22} aria-hidden="true" />}
+          </button>
+          <button id="video-fullscreen-toggle" type="button" className="video-fullscreen-btn" onClick={toggleFullscreen} aria-label="Alternar tela cheia">
+            {fullscreen ? <Minimize2 size={22} aria-hidden="true" /> : <Maximize2 size={22} aria-hidden="true" />}
+          </button>
+        </div>
       </div>
-      <div className="video-controls-right">
-        <button id="video-mute-toggle" type="button" className="video-mute-btn" onClick={toggleMute} aria-label={muted ? 'Desmutar vídeo' : 'Mutar vídeo'}>{muted ? <VolumeX size={22} aria-hidden="true" /> : <Volume2 size={22} aria-hidden="true" />}</button>
-        <button id="video-fullscreen-toggle" type="button" className="video-fullscreen-btn" onClick={toggleFullscreen} aria-label="Alternar tela cheia">{fullscreen ? <Minimize2 size={22} aria-hidden="true" /> : <Maximize2 size={22} aria-hidden="true" />}</button>
-      </div>
-    </div>
-  </section>;
+    </section>
+  );
 }
 
 export function AboutSection() {
-  return <section className="section section-light about-premium-section section-full-width" id="sobre"><div className="container about-container"><div className="about-main-grid"><div className="about-content-col"><span className="eyebrow-gold">SOBRE O GRUPO</span><h2 className="about-headline">O <span className="headline-highlight-italic">Grupo Mais Barato</span> reúne negócios que fazem parte do dia a dia das pessoas de <span style={{ whiteSpace: 'nowrap' }}>Belém — PA</span></h2><div className="about-paragraphs"><p className="about-mid-text">Conectando varejo, gastronomia, saúde, bem-estar e serviços com qualidade, inovação e proximidade.</p><p className="about-lead-extended">Nossa atuação integra marcas que compartilham o mesmo compromisso: oferecer experiências que superem expectativas, sempre com foco nas pessoas, na excelência e no desenvolvimento das comunidades onde estamos presentes. Mais do que crescer, acreditamos em transformar relações, gerar oportunidades e construir um futuro cada vez melhor para clientes, colaboradores, parceiros e para a sociedade.</p></div><div className="gold-accent-line" /></div><div className="about-photo-col"><div className="about-photo-wrapper">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={asset('Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.png')} alt="Equipe e Fachada Grupo Mais Barato" className="about-team-photo" loading="lazy" /></div></div></div></div></section>;
+  return <section className="section section-light about-premium-section section-full-width" id="sobre"><div className="container about-container"><div className="about-main-grid"><div className="about-content-col"><span className="eyebrow-gold">SOBRE O GRUPO</span><h2 className="about-headline">O <span className="headline-highlight-italic">Grupo Mais Barato</span> reúne negócios que fazem parte do dia a dia das pessoas de <span style={{ whiteSpace: 'nowrap' }}>Belém — PA</span></h2><div className="about-paragraphs"><p className="about-mid-text">Conectando varejo, gastronomia, saúde, bem-estar e serviços com qualidade, inovação e proximidade.</p><p className="about-lead-extended">Nossa atuação integra marcas que compartilham o mesmo compromisso: oferecer experiências que superem expectativas, sempre com foco nas pessoas, na excelência e no desenvolvimento das comunidades onde estamos presentes. Mais do que crescer, acreditamos em transformar relações, gerar oportunidades e construir um futuro cada vez melhor para clientes, colaboradores, parceiros e para a sociedade.</p></div><div className="gold-accent-line" /></div><div className="about-photo-col"><div className="about-photo-wrapper">{/* eslint-disable-next-line @next/next/no-img-element */}<img src={asset('Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp')} alt="Equipe e Fachada Grupo Mais Barato" className="about-team-photo" loading="lazy" /></div></div></div></div></section>;
 }
 
 export function AboutInstitutional() {
@@ -102,7 +255,7 @@ export function AboutInstitutional() {
 
         <div className="about-photo-col reveal delay-1">
           <div className="about-photo-wrapper">
-            <img src={asset('Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.png')} alt="Equipe e Fachada Grupo Mais Barato" className="about-team-photo" loading="lazy" />
+            <img src={asset('Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp')} alt="Equipe e Fachada Grupo Mais Barato" className="about-team-photo" loading="lazy" />
             <div className="about-floating-glass-card">
               <div className="floating-card-icon"><Leaf size={22} aria-hidden="true" /></div>
               <div className="floating-card-divider" />
@@ -158,11 +311,11 @@ export function AboutInstitutional() {
 }
 
 const brandData = [
-  { id: 'wine', theme: 'wine', logo: 'icon-the-winee.png', watermark: Wine, serifTitle: true, title: <>THE WINE<br /><span className="card-brand-subtitle">Xperience</span></>, keywords: 'RÓTULOS • EXPERIÊNCIA • SOFISTICAÇÃO', description: 'Experiência voltada ao universo dos vinhos, com curadoria de rótulos e momentos para apreciar bons encontros.', images: ['The Wine Experience/parede-vinhos-decoracao.webp', 'The Wine Experience/salao-principal-clientes.webp', 'The Wine Experience/mesa-reservada-adega.webp', 'The Wine Experience/jantar-harmonizado-brinde.webp'] },
-  { id: 'super', theme: 'super', logo: 'icon-b-supermercadoo.png', watermark: ShoppingCart, title: <>+B Supermercados</>, keywords: 'VARIEDADE • ECONOMIA • CONVENIÊNCIA', description: 'Rede de supermercados com mix completo de alimentos e ofertas para a rotina das famílias.', images: ['Supermercado +B/00_CardHome/1-foto-supermercado.webp', 'Supermercado +B/00_CardHome/2-foto-supermercado.webp', 'Supermercado +B/00_CardHome/3-foto-supermercado.webp', 'Supermercado +B/00_CardHome/4-supemercado.webp'] },
-  { id: 'farma', theme: 'farma', logo: 'icon-b-farmaa.png', watermark: HeartPulse, title: <>+B Farma</>, keywords: 'SAÚDE • BELEZA • CONVENIÊNCIA', description: 'Drogarias integradas oferecendo amplo estoque de medicamentos, cuidados para a pele, cosméticos e atendimento humanizado.', images: ['Mais B Farma/foto-farma-b (1).webp', 'Mais B Farma/foto-farma-b (2).webp', 'Mais B Farma/foto-farma-b (3).webp', 'Mais B Farma/foto-farma-b (4).webp'] },
-  { id: 'park', theme: 'park', logo: 'icon-vila-plaza.png', watermark: PartyPopper, title: <>Villa Plaza Park</>, keywords: 'DIVERSÃO • FAMÍLIA • LAZER', description: 'Maior Parque infantil de Belém, pensado para crianças e famílias, com atrações, segurança e muita diversão para os pequenos.', images: ['Villa Plaza (Park Infantil)/foto-park-infantil (1).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (2).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (3).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (4).webp'] },
-  { id: 'plaza', theme: 'plaza', logo: 'icon-vila-plaza.png', watermark: Utensils, serifTitle: true, title: <>Villa Plaza<br />Restaurante</>, keywords: 'SABOR · ENCONTROS · EXPERIÊNCIA', description: 'Ambiente acolhedor e cardápio pensado para momentos especiais, encontros e boa gastronomia.', images: ['Villa Plaza (Restaurante)/vila-plaza-restaurante-ambiente.webp', 'Villa Plaza (Restaurante)/vila-plaza-gastronomia_buffet_pratos_quentes.webp', 'Villa Plaza (Restaurante)/vila-plaza-gastronomia_buffet_saladas_selecao.webp', 'Villa Plaza (Restaurante)/vila-plaza-experiencia_servico_garcom.webp'] },
+  { id: 'wine', theme: 'wine', logo: 'icon-the-winee.webp', watermark: Wine, serifTitle: true, title: <>THE WINE<br /><span className="card-brand-subtitle">Xperience</span></>, keywords: 'RÓTULOS • EXPERIÊNCIA • SOFISTICAÇÃO', description: 'Experiência voltada ao universo dos vinhos, com curadoria de rótulos e momentos para apreciar bons encontros.', images: ['The Wine Experience/parede-vinhos-decoracao.webp', 'The Wine Experience/salao-principal-clientes.webp', 'The Wine Experience/mesa-reservada-adega.webp', 'The Wine Experience/jantar-harmonizado-brinde.webp'] },
+  { id: 'super', theme: 'super', logo: 'icon-b-supermercadoo.webp', watermark: ShoppingCart, title: <>+B Supermercados</>, keywords: 'VARIEDADE • ECONOMIA • CONVENIÊNCIA', description: 'Rede de supermercados com mix completo de alimentos e ofertas para a rotina das famílias.', images: ['Supermercado +B/00_CardHome/1-foto-supermercado.webp', 'Supermercado +B/00_CardHome/2-foto-supermercado.webp', 'Supermercado +B/00_CardHome/3-foto-supermercado.webp', 'Supermercado +B/00_CardHome/4-supemercado.webp'] },
+  { id: 'farma', theme: 'farma', logo: 'icon-b-farmaa.webp', watermark: HeartPulse, title: <>+B Farma</>, keywords: 'SAÚDE • BELEZA • CONVENIÊNCIA', description: 'Drogarias integradas oferecendo amplo estoque de medicamentos, cuidados para a pele, cosméticos e atendimento humanizado.', images: ['Mais B Farma/foto-farma-b (1).webp', 'Mais B Farma/foto-farma-b (2).webp', 'Mais B Farma/foto-farma-b (3).webp', 'Mais B Farma/foto-farma-b (4).webp'] },
+  { id: 'park', theme: 'park', logo: 'icon-vila-plaza.webp', watermark: PartyPopper, title: <>Villa Plaza Park</>, keywords: 'DIVERSÃO • FAMÍLIA • LAZER', description: 'Maior Parque infantil de Belém, pensado para crianças e famílias, com atrações, segurança e muita diversão para os pequenos.', images: ['Villa Plaza (Park Infantil)/foto-park-infantil (1).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (2).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (3).webp', 'Villa Plaza (Park Infantil)/foto-park-infantil (4).webp'] },
+  { id: 'plaza', theme: 'plaza', logo: 'icon-vila-plaza.webp', watermark: Utensils, serifTitle: true, title: <>Villa Plaza<br />Restaurante</>, keywords: 'SABOR · ENCONTROS · EXPERIÊNCIA', description: 'Ambiente acolhedor e cardápio pensado para momentos especiais, encontros e boa gastronomia.', images: ['Villa Plaza (Restaurante)/vila-plaza-restaurante-ambiente.webp', 'Villa Plaza (Restaurante)/vila-plaza-gastronomia_buffet_pratos_quentes.webp', 'Villa Plaza (Restaurante)/vila-plaza-gastronomia_buffet_saladas_selecao.webp', 'Villa Plaza (Restaurante)/vila-plaza-experiencia_servico_garcom.webp'] },
 ];
 
 const orbitOrder = ['plaza', 'super', 'wine', 'park', 'farma'];
