@@ -45,4 +45,8 @@ jobs:
           docker compose -f docker-compose.prod.yml up -d --remove-orphans
           docker image prune -f
           docker builder prune -f --keep-storage 500MB
+          echo "=== CONTAINER STATUS ==="
+          docker compose -f docker-compose.prod.yml ps
+          echo "=== WEB LOGS ==="
+          docker compose -f docker-compose.prod.yml logs --tail 30 web
           REMOTE
