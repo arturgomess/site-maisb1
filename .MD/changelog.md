@@ -5,6 +5,7 @@
   - **Conversão Completa para WebP**: Todas as fotografias e ícones restantes foram convertidos para formato WebP de alta fidelidade e compressão otimizada.
   - **Controles de Vídeo em Tela Cheia (`InstitutionalVideoHero`)**: Implementada interface em tela cheia com auto-hide inteligente ao ficar inativo (~2,6s) e reaparecimento instantâneo ao movimentar o mouse. Barra de progresso ultra-minimalista em amarelo vibrante (`#ffc400`) com suporte a clique e arraste (*scrubbing* via Pointer Capture).
   - **Suporte a Byte-Range Requests (HTTP 206 Partial Content)**: Atualizado o manipulador de rota estática (`app/assets/[...path]/route.ts`) com suporte nativo a cabeçalho `Range`, `Accept-Ranges: bytes` e respostas 206. Isso desbloqueou o avanço e retrocesso instantâneo de mídia em qualquer navegador.
+  - **Enxugamento do Dockerfile e Otimização da VPS (-2 GB)**: Eliminada a duplicação de `node_modules` no estágio `runner` do `Dockerfile`, mantendo apenas o bundle mínimo do `standalone` e o cliente Prisma. Adicionada política de rotação de logs (`max-size: 10m`) no `docker-compose.prod.yml` e rotina pós-deploy de `docker image prune` e `docker builder prune` no workflow do GitHub Actions.
 
 - **Página de Política de Privacidade & Termos de Uso (/termos-e-privacidade) e Faxina dos HTMLs Legados (04/09/2026)**:
   - **Criação da Rota Nativa em Next.js (`app/termos-e-privacidade/page.tsx`)**: Rota estruturada no padrão Next.js 15, herdando `SiteHeader` e `SiteFooter`, com metadados completos de SEO e conformidade com a LGPD (Lei nº 13.709/2018).
