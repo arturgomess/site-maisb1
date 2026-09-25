@@ -19,7 +19,7 @@ export default async function HomePage() {
             <div className="news-header-left">
               <span className="eyebrow-gold">NOTÍCIAS & NOVIDADES</span>
               <h2 className="news-home-title">
-                Fique por dentro das <span className="headline-highlight-italic">nossas novidades.</span>
+                Fique por dentro das <span className="headline-highlight-italic">nossas novidades</span>
               </h2>
             </div>
             <div className="news-header-right">

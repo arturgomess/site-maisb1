@@ -20,7 +20,7 @@ export function OpportunitiesSection() {
             <span className="eyebrow-gold">OPORTUNIDADES</span>
             <h2 className="trabalhe-card-headline">
               Construa sua história com o{' '}
-              <span className="headline-highlight-italic">Grupo Mais Barato.</span>
+              <span className="headline-highlight-italic">Grupo Mais Barato</span>
             </h2>
             <div className="trabalhe-gold-accent-line" />
             <p className="trabalhe-card-description">

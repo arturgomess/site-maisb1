@@ -66,6 +66,7 @@
   align-items: center;
   gap: 2.2rem;
   font-family: var(--font-primary, 'DM Sans', sans-serif);
+  margin-right: clamp(120px, 11vw, 175px);
 }
 
 .main-menu > a,

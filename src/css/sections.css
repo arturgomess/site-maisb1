@@ -4987,10 +4987,26 @@ textarea.form-control {
 }
 
 .faq-grid {
-  display: grid;
-  grid-template-columns: 0.8fr 1.2fr;
-  gap: 60px;
-  align-items: flex-start;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 48px;
+  max-width: 880px;
+  margin: 0 auto;
+  width: 100%;
+}
+
+.faq-content-col {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  text-align: center;
+  width: 100%;
+}
+
+.faq-content-col .eyebrow-gold {
+  margin: 0 auto 14px auto;
+  text-align: center;
 }
 
 .faq-headline {
@@ -4999,6 +5015,16 @@ textarea.form-control {
   line-height: 1.15;
   color: #111111;
   letter-spacing: -0.02em;
+  text-align: center;
+  margin: 0 auto;
+}
+
+.faq-content-col .gold-accent-line {
+  margin: 20px auto 0 auto;
+}
+
+.faq-accordion-col {
+  width: 100%;
 }
 
 .faq-accordion-list {
@@ -5074,7 +5100,6 @@ textarea.form-control {
   }
 
   .faq-grid {
-    grid-template-columns: 1fr !important;
     gap: 36px;
   }
 
@@ -5091,7 +5116,6 @@ textarea.form-control {
   }
 
   .faq-grid {
-    grid-template-columns: 1fr !important;
     gap: 32px;
   }
 
@@ -5147,7 +5171,6 @@ textarea.form-control {
   }
 
   .faq-grid {
-    grid-template-columns: 1fr !important;
     gap: 26px;
   }
 
