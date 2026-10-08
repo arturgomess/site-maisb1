@@ -52,7 +52,7 @@ export function ArticleView({ article, related }: { article: NewsArticle; relate
           </header>
           <figure className="article-cover-wrapper">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp'} alt={article.title} />
+            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp'} alt={article.title} width={1920} height={1080} loading="eager" decoding="async" fetchPriority="high" />
             <figcaption className="article-cover-caption">Fachada e equipe do Grupo Mais Barato</figcaption>
           </figure>
           <div className="article-content-body">
@@ -74,7 +74,7 @@ export function ArticleView({ article, related }: { article: NewsArticle; relate
             <div className="article-gallery-grid">
               {article.gallery.map((item, index) => <figure className="article-gallery-item" key={`${item.url}-${index}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.url} alt={item.alt || `${article.title} — foto ${index + 1}`} loading="lazy" />
+                <img src={item.url} alt={item.alt || `${article.title} — foto ${index + 1}`} width={item.width || 1200} height={item.height || 900} loading="lazy" decoding="async" />
                 {item.caption ? <figcaption>{item.caption}</figcaption> : null}
               </figure>)}
             </div>
