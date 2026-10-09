@@ -10,7 +10,7 @@ const fallbackArticles: NewsArticle[] = [
   { id: 'fallback-park', slug: 'villa-plaza-park-anuncia-programacao-cultural-lazer-gastronomia', title: 'Villa Plaza Park anuncia programação cultural de lazer e gastronomia para os finais de semana', category: 'Villa Plaza', publishedAt: '2026-07-28T12:00:00-03:00', excerpt: 'Música ao vivo, espaço kids seguro, food park e ambientes instagramáveis fazem do complexo o ponto de encontro favorito na região.', imagePath: '/assets/Fotografias/Villa Plaza (Park Infantil)/villa-plaza-park-tapana.webp', body: ['O Villa Plaza Park reúne diversão, gastronomia e experiências para toda a família.'] },
 ];
 
-const fallbackSettings: SiteSettings = { siteName: 'Grupo Mais Barato', defaultTitle: 'Grupo Mais Barato | Varejo, cuidado e experiências', defaultDescription: 'O Grupo Mais Barato reúne negócios que fazem parte do dia a dia das pessoas de Belém-PA.', defaultKeywords: ['Grupo Mais Barato', 'Grupo +B', 'Belém', 'varejo paraense'], googleAnalyticsId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, robotsIndex: true };
+const fallbackSettings: SiteSettings = { siteName: 'Grupo Mais Barato', defaultTitle: 'Grupo Mais Barato | Varejo, cuidado e experiências', defaultDescription: 'O Grupo Mais Barato reúne negócios que fazem parte do dia a dia das pessoas de Belém-PA.', defaultKeywords: ['Grupo Mais Barato', 'Grupo +B', 'Belém', 'varejo paraense'], robotsIndex: true };
 
 const articleSelect = { id: true, slug: true, title: true, category: true, publishedAt: true, excerpt: true, author: true, bodyHtml: true, status: true, seoTitle: true, seoDescription: true, imagePath: true, imageAlt: true, imageCaption: true, galleryJson: true, noIndex: true } as const;
 
@@ -49,7 +49,7 @@ export async function getArticleBySlug(slug: string): Promise<NewsArticle | null
 export async function getSiteSettings(): Promise<SiteSettings> {
   if (!db) return fallbackSettings;
   try {
-    const settings = await db.siteSettings.findUnique({ where: { id: 1 } });
+    const settings = await db.siteSettings.findUnique({ where: { id: 1 }, select: { siteName: true, defaultTitle: true, defaultDescription: true, defaultKeywords: true, canonicalUrl: true, ogImage: true, robotsIndex: true } });
     if (!settings) return fallbackSettings;
     let keywords = fallbackSettings.defaultKeywords;
     if (Array.isArray(settings.defaultKeywords)) {
@@ -60,7 +60,7 @@ export async function getSiteSettings(): Promise<SiteSettings> {
         if (Array.isArray(parsed)) keywords = parsed.filter((item): item is string => typeof item === 'string');
       } catch {}
     }
-    return { siteName: settings.siteName, defaultTitle: settings.defaultTitle, defaultDescription: settings.defaultDescription, defaultKeywords: keywords, googleAnalyticsId: settings.googleAnalyticsId || undefined, canonicalUrl: settings.canonicalUrl || undefined, ogImage: settings.ogImage || undefined, robotsIndex: settings.robotsIndex };
+    return { siteName: settings.siteName, defaultTitle: settings.defaultTitle, defaultDescription: settings.defaultDescription, defaultKeywords: keywords, canonicalUrl: settings.canonicalUrl || undefined, ogImage: settings.ogImage || undefined, robotsIndex: settings.robotsIndex };
   } catch {
     return fallbackSettings;
   }

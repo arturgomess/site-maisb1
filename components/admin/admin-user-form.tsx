@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { useEffect, useMemo, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { ArrowLeft, Check, CheckCircle2, Eye, EyeOff, FileText, Info, LoaderCircle, LockKeyhole, PencilLine, Plus, Settings2, ShieldCheck, SlidersHorizontal, UserRound, UsersRound, X } from 'lucide-react';
+import { ArrowLeft, BarChart3, Check, CheckCircle2, Eye, EyeOff, FileText, Info, LoaderCircle, LockKeyhole, PencilLine, Plus, Settings2, ShieldCheck, SlidersHorizontal, UserRound, UsersRound, X } from 'lucide-react';
 import { Button } from '../ui/button';
 import { Card } from '../ui/card';
 import { getRoleLabel, getRolePermissions, isSecurePassword, isValidAdminEmail, type AdminPermissions, type AdminRole } from '../../lib/admin-access';
@@ -22,6 +22,7 @@ const areas: { key: keyof AdminPermissions; label: string; description: string; 
   { key: 'posts', label: 'Publicações', description: 'Criar, editar e gerenciar postagens.', icon: FileText },
   { key: 'settings', label: 'Configurações', description: 'Acessar e alterar as configurações da plataforma.', icon: Settings2 },
   { key: 'access', label: 'Gestão de Acessos', description: 'Cadastrar, editar e gerenciar outros usuários.', icon: UsersRound },
+  { key: 'analytics', label: 'Analytics', description: 'Visualizar os dados de desempenho do site.', icon: BarChart3 },
 ];
 
 const eventLabels: Record<string, string> = {
@@ -57,7 +58,7 @@ export function AdminUserForm({ userId, currentUserId }: { userId?: string; curr
   const [showPassword, setShowPassword] = useState(false);
   const [showConfirmPassword, setShowConfirmPassword] = useState(false);
   const [role, setRole] = useState<AdminRole>('CUSTOM');
-  const [permissions, setPermissions] = useState<AdminPermissions>({ posts: true, settings: false, access: false });
+  const [permissions, setPermissions] = useState<AdminPermissions>({ posts: true, settings: false, access: false, analytics: false });
   const [isActive, setIsActive] = useState(true);
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');

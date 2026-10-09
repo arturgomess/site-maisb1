@@ -2,16 +2,17 @@
 
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { ExternalLink, FileText, LogOut, Menu, Settings2, UsersRound, X } from 'lucide-react';
+import { BarChart3, ExternalLink, FileText, LogOut, Menu, Settings2, UsersRound, X } from 'lucide-react';
 import { useState } from 'react';
 import { getRoleLabel, hasFullAdminAccess } from '../../lib/admin-access';
 import type { AdminSessionUser } from '../../lib/cms-auth';
 
-type AdminNavItem = { href: string; label: string; icon: typeof FileText; permission: 'canManagePosts' | 'canManageSettings' | 'canManageAccess' };
+type AdminNavItem = { href: string; label: string; icon: typeof FileText; permission: 'canManagePosts' | 'canManageSettings' | 'canManageAccess' | 'canManageAnalytics' };
 
 const contentItems: AdminNavItem[] = [{ href: '/admin/posts', label: 'Publicações', icon: FileText, permission: 'canManagePosts' }];
 const administrationItems: AdminNavItem[] = [
   { href: '/admin/access', label: 'Gestão de Acessos', icon: UsersRound, permission: 'canManageAccess' as const },
+  { href: '/admin/analytics', label: 'Analytics', icon: BarChart3, permission: 'canManageAnalytics' as const },
   { href: '/admin/settings', label: 'Configurações', icon: Settings2, permission: 'canManageSettings' as const },
 ];
 
@@ -25,7 +26,7 @@ export function AdminShell({ children, user }: { children: React.ReactNode; user
   const [open, setOpen] = useState(false);
   const visibleContentItems = contentItems.filter(({ permission }) => user[permission]);
   const visibleAdminItems = administrationItems.filter(({ permission }) => user[permission]);
-  const fullAccess = hasFullAdminAccess({ posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess }, user.isActive);
+  const fullAccess = hasFullAdminAccess({ posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess, analytics: user.canManageAnalytics }, user.isActive);
 
   const logout = async () => {
     await fetch('/api/admin/session', { method: 'DELETE' });

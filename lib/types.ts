@@ -29,7 +29,6 @@ export type SiteSettings = {
   defaultTitle: string;
   defaultDescription: string;
   defaultKeywords: string[];
-  googleAnalyticsId?: string;
   canonicalUrl?: string;
   ogImage?: string;
   robotsIndex?: boolean;

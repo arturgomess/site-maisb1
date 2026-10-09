@@ -23,12 +23,14 @@ describe('AdminUserForm permission switches', () => {
     const posts = screen.getByRole('switch', { name: 'Permissão: Publicações' });
     const settings = screen.getByRole('switch', { name: 'Permissão: Configurações' });
     const access = screen.getByRole('switch', { name: 'Permissão: Gestão de Acessos' });
+    const analytics = screen.getByRole('switch', { name: 'Permissão: Analytics' });
     const postsHandle = posts.querySelector('span');
     const settingsHandle = settings.querySelector('span');
 
     expect(posts.getAttribute('aria-checked')).toBe('true');
     expect(settings.getAttribute('aria-checked')).toBe('false');
     expect(access.getAttribute('aria-checked')).toBe('false');
+    expect(analytics.getAttribute('aria-checked')).toBe('false');
     expect(postsHandle?.className).toContain('left-1');
     expect(postsHandle?.className).toContain('translate-x-5');
     expect(settingsHandle?.className).toContain('translate-x-0');
@@ -37,23 +39,29 @@ describe('AdminUserForm permission switches', () => {
 
     expect(settings.getAttribute('aria-checked')).toBe('true');
     expect(settingsHandle?.className).toContain('translate-x-5');
+
+    fireEvent.click(analytics);
+
+    expect(analytics.getAttribute('aria-checked')).toBe('true');
   });
 
   it('shows eye icons that match whether each password is currently visible', () => {
     render(<AdminUserForm currentUserId="admin-1" />);
 
+    const password = screen.getByLabelText('Senha');
+    const confirmPassword = screen.getByLabelText('Confirmar senha');
     const showPasswordButton = screen.getByRole('button', { name: 'Mostrar senha' });
     const showConfirmButton = screen.getByRole('button', { name: 'Mostrar confirmação de senha' });
 
-    expect(screen.getByLabelText('Senha').getAttribute('type')).toBe('password');
+    expect(password.getAttribute('type')).toBe('password');
     expect(showPasswordButton.querySelector('svg')?.getAttribute('data-icon')).toBe('EyeOff');
     expect(showConfirmButton.querySelector('svg')?.getAttribute('data-icon')).toBe('EyeOff');
 
     fireEvent.click(showPasswordButton);
     fireEvent.click(showConfirmButton);
 
-    expect(screen.getByLabelText('Senha').getAttribute('type')).toBe('text');
-    expect(screen.getByLabelText('Confirmar senha').getAttribute('type')).toBe('text');
+    expect(password.getAttribute('type')).toBe('text');
+    expect(confirmPassword.getAttribute('type')).toBe('text');
     expect(screen.getByRole('button', { name: 'Ocultar senha' }).querySelector('svg')?.getAttribute('data-icon')).toBe('Eye');
     expect(screen.getByRole('button', { name: 'Ocultar confirmação de senha' }).querySelector('svg')?.getAttribute('data-icon')).toBe('Eye');
   });

@@ -706,6 +706,7 @@ export function SiteFooter() {
             <span className="copyright-left">Copyright © 2026 Grupo Mais Barato – All rights reserved</span>
             <div className="legal-center">
               <Link href="/termos-e-privacidade">Termos & Privacidade</Link>
+              <button type="button" onClick={() => window.dispatchEvent(new Event('analytics-open-consent'))} style={{ marginLeft: 14, border: 0, padding: 0, background: 'transparent', color: 'inherit', font: 'inherit', textDecoration: 'underline', cursor: 'pointer' }}>Preferências de cookies</button>
             </div>
             <div className="dev-right">
               <span>Desenvolvido por:</span>

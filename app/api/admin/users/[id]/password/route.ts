@@ -19,7 +19,7 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
 
   const target = await db.adminUser.findUnique({ where: { id } });
   if (!target) return Response.json({ error: 'Usuário não encontrado.' }, { status: 404 });
-  const targetPermissions = { posts: target.canManagePosts, settings: target.canManageSettings, access: target.canManageAccess };
+  const targetPermissions = { posts: target.canManagePosts, settings: target.canManageSettings, access: target.canManageAccess, analytics: target.canManageAnalytics };
   if (target.id !== access.user.id && hasFullAdminAccess(targetPermissions, target.isActive) && !hasFullAdminAccess(getAdminPermissions(access.user), access.user.isActive)) {
     return Response.json({ error: 'Somente um administrador completo pode redefinir a senha de outra conta administrativa completa.' }, { status: 403 });
   }

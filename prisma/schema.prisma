@@ -26,6 +26,7 @@ model Post {
   noIndex       Boolean  @default(false)
   createdAt     DateTime @default(now())
   updatedAt     DateTime @updatedAt
+  analyticsEvents AnalyticsEvent[]
 
   @@index([status, publishedAt])
   @@index([category])
@@ -38,7 +39,6 @@ model SiteSettings {
   defaultTitle      String   @db.VarChar(70)
   defaultDescription String  @db.VarChar(180)
   defaultKeywords   Json
-  googleAnalyticsId String?  @db.VarChar(30)
   canonicalUrl      String?  @db.VarChar(255)
   ogImage           String?  @db.VarChar(500)
   robotsIndex       Boolean  @default(true)
@@ -57,6 +57,7 @@ model AdminUser {
   canManagePosts       Boolean           @default(true)
   canManageSettings    Boolean           @default(false)
   canManageAccess      Boolean           @default(false)
+  canManageAnalytics   Boolean           @default(false)
   isActive             Boolean           @default(true)
   mustChangePassword   Boolean           @default(false)
   lastAccessAt         DateTime?
@@ -69,6 +70,48 @@ model AdminUser {
   @@index([isActive, role])
   @@index([name])
   @@map("admin_users")
+}
+
+model AnalyticsVisitor {
+  visitorDigest String   @id @db.Char(64)
+  consentedAt   DateTime @default(now())
+  lastSeenAt    DateTime @default(now())
+  revokedAt     DateTime?
+
+  @@index([lastSeenAt])
+  @@index([revokedAt])
+  @@map("analytics_visitors")
+}
+
+model AnalyticsEvent {
+  id             String   @id @default(cuid()) @db.VarChar(30)
+  eventId        String   @unique @db.VarChar(64)
+  eventType      String   @db.VarChar(24)
+  occurredAt     DateTime
+  path           String   @db.VarChar(500)
+  postId         String?  @db.VarChar(30)
+  visitorDigest  String?  @db.Char(64)
+  sourceCategory String   @db.VarChar(24)
+  sourceHost     String?  @db.VarChar(255)
+  device         String   @db.VarChar(16)
+  engagedSeconds Int      @default(0)
+  post           Post?    @relation(fields: [postId], references: [id], onDelete: SetNull)
+
+  @@index([occurredAt, eventType])
+  @@index([postId, occurredAt, eventType])
+  @@index([sourceCategory, occurredAt])
+  @@index([visitorDigest, occurredAt])
+  @@index([device, occurredAt])
+  @@map("analytics_events")
+}
+
+model AnalyticsConsentLog {
+  decisionId String   @id @db.Char(36)
+  decision   String   @db.VarChar(8)
+  occurredAt DateTime @default(now())
+
+  @@index([occurredAt, decision])
+  @@map("analytics_consent_decisions")
 }
 
 model AdminSession {

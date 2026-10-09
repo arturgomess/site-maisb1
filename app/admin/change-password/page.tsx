@@ -6,5 +6,5 @@ export default async function ChangeAdminPasswordPage() {
   const user = await getCurrentAdmin();
   if (!user) redirect('/admin/login');
   if (!user.mustChangePassword) redirect('/admin');
-  return <ForcedPasswordChange permissions={{ posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess }} />;
+  return <ForcedPasswordChange permissions={{ posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess, analytics: user.canManageAnalytics }} />;
 }

@@ -1,9 +1,11 @@
 import type { Metadata } from 'next';
 import { DM_Sans, DM_Serif_Display } from 'next/font/google';
-import { GoogleAnalytics } from '@next/third-parties/google';
 import { SiteFooter } from '../components/site-footer';
 import { SiteHeader } from '../components/site-header';
 import { RouteTheme } from '../components/route-theme';
+import { AnalyticsConsent } from '../components/analytics/analytics-consent';
+import { PublicAnalyticsTracker } from '../components/analytics/public-analytics-tracker';
+import { AnalyticsConsentProvider } from '../components/analytics/analytics-consent-provider';
 import { getSiteSettings } from '../lib/content';
 import './globals.css';
 
@@ -46,8 +48,6 @@ export async function generateMetadata(): Promise<Metadata> {
 }
 
 export default async function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
-  const settings = await getSiteSettings();
-
   return (
     <html lang="pt-BR" className={`${dmSans.variable} ${dmSerifDisplay.variable}`} suppressHydrationWarning>
       <head>
@@ -59,11 +59,14 @@ export default async function RootLayout({ children }: Readonly<{ children: Reac
         />
       </head>
       <body suppressHydrationWarning>
-        <RouteTheme />
-        <SiteHeader />
-        <div id="next-page-content">{children}</div>
-        <SiteFooter />
-        {settings.googleAnalyticsId ? <GoogleAnalytics gaId={settings.googleAnalyticsId} /> : null}
+        <AnalyticsConsentProvider>
+          <RouteTheme />
+          <SiteHeader />
+          <div id="next-page-content">{children}</div>
+          <SiteFooter />
+          <PublicAnalyticsTracker />
+          <AnalyticsConsent />
+        </AnalyticsConsentProvider>
       </body>
     </html>
   );

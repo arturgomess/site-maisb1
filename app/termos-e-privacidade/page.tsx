@@ -180,7 +180,7 @@ export default function TermosEPrivacidadePage() {
                     <span>Uso de Cookies Essenciais e Analíticos</span>
                   </div>
                   <p>
-                    Cookies são pequenos arquivos gravados em seu navegador para memorizar preferências de navegação e coletar métricas analíticas anônimas. Utilizamos cookies essenciais para manter o desempenho e a segurança do portal e ferramentas de métricas (como Google Analytics 4 com anonimização de IP) para compreender o comportamento de navegação e aprimorar a experiência dos usuários.
+                    A coleta analítica própria só começa após seu aceite. Com ele, usamos um identificador aleatório guardado em cookie first-party HttpOnly e armazenamos apenas seu HMAC, sem IP, user-agent bruto ou URL completa de referência. Registramos páginas públicas, domínio de origem, classe de dispositivo e segundos em que a página permanece visível. Os eventos detalhados são removidos após 90 dias. O identificador não representa uma conta nem identifica diretamente uma pessoa.
                   </p>
                 </div>
 
@@ -190,7 +190,7 @@ export default function TermosEPrivacidadePage() {
                     <span>Gerenciamento no Navegador</span>
                   </div>
                   <p>
-                    O usuário tem a liberdade de desativar ou excluir os cookies a qualquer momento diretamente nas opções de configurações de seu navegador de internet. Contudo, a desativação de cookies técnicos poderá afetar o correto funcionamento de certas funcionalidades do portal.
+                    Você pode recusar o uso de métricas ou reabrir as preferências pelo link “Preferências de cookies” no rodapé. A revogação interrompe novas coletas e apaga os eventos associados ao identificador. Cookies essenciais continuam ativos para segurança e funcionamento do portal; bloquear cookies técnicos no navegador pode afetar funcionalidades do site.
                   </p>
                 </div>
               </div>
