@@ -1,14 +1,15 @@
 import { mkdir, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { isAdminAuthenticated } from '../../../../lib/cms-auth';
+import { requireAdminPermission } from '../../../../lib/admin-api-auth';
 
 export const runtime = 'nodejs';
 
 const allowedTypes: Record<string, string> = { 'image/jpeg': 'jpg', 'image/png': 'png', 'image/webp': 'webp' };
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   const formData = await request.formData();
   const file = formData.get('file');
   if (!(file instanceof File)) return Response.json({ error: 'Envie um arquivo de imagem.' }, { status: 400 });

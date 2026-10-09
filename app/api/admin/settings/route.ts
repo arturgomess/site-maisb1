@@ -1,17 +1,19 @@
 import { revalidatePath } from 'next/cache';
-import { isAdminAuthenticated } from '../../../../lib/cms-auth';
+import { requireAdminPermission } from '../../../../lib/admin-api-auth';
 import { db } from '../../../../lib/db';
 import { getSiteSettings } from '../../../../lib/content';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('settings');
+  if (access.response) return access.response;
   return Response.json({ settings: await getSiteSettings(), storage: db ? 'mysql' : 'unconfigured' });
 }
 
 export async function PATCH(request: Request) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('settings');
+  if (access.response) return access.response;
   if (!db) return Response.json({ error: 'Banco de dados não configurado. Defina DATABASE_URL.' }, { status: 503 });
   const body = await request.json();
   const settings = {
