@@ -19,12 +19,12 @@ export function OpportunitiesSection() {
           <div className="trabalhe-card-content">
             <span className="eyebrow-gold">OPORTUNIDADES</span>
             <h2 className="trabalhe-card-headline">
-              Construa sua história com o{' '}
-              <span className="headline-highlight-italic">Grupo Mais Barato</span>
+              Construa sua história com a do{' '}
+              <span className="headline-highlight-italic">GMB</span>
             </h2>
             <div className="trabalhe-gold-accent-line" />
             <p className="trabalhe-card-description">
-              Venha fazer parte de um time que cresce junto e transforma o dia a dia de milhares de pessoas.
+              Venha fazer parte de um time que cresce junto e transforma o dia a dia de milhares de pessoas
             </p>
             <div className="trabalhe-card-actions">
               <a
