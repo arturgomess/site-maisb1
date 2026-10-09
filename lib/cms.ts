@@ -146,6 +146,15 @@ export async function updateCmsPost(id: string, raw: Partial<CmsPostInput>) {
   return toCmsPost(post);
 }
 
+export async function updateCmsPostStatus(id: string, status: PostStatus) {
+  if (!db) throw new Error('Banco de dados não configurado. Defina DATABASE_URL.');
+  const current = await getCmsPost(id);
+  if (!current) return null;
+  if (status === 'published') validateCmsPost({ ...current, status });
+  const post = await db.post.update({ where: { id }, data: { status }, select: postSelect });
+  return toCmsPost(post);
+}
+
 export async function deleteCmsPost(id: string) {
   if (!db) throw new Error('Banco de dados não configurado. Defina DATABASE_URL.');
   await db.post.delete({ where: { id } });

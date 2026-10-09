@@ -1,6 +1,6 @@
 import { revalidatePath } from 'next/cache';
 import { isAdminAuthenticated } from '../../../../../lib/cms-auth';
-import { deleteCmsPost, getCmsPost, updateCmsPost } from '../../../../../lib/cms';
+import { deleteCmsPost, getCmsPost, updateCmsPost, updateCmsPostStatus } from '../../../../../lib/cms';
 
 export const runtime = 'nodejs';
 
@@ -15,7 +15,20 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
   if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
   const { id } = await context.params;
   try {
-    const post = await updateCmsPost(id, await request.json());
+    const body = await request.json();
+    if (body && Object.keys(body).length === 1 && Object.hasOwn(body, 'status')) {
+      if (body.status !== 'draft' && body.status !== 'published') {
+        return Response.json({ error: 'Status de publicação inválido.' }, { status: 400 });
+      }
+      const post = await updateCmsPostStatus(id, body.status);
+      if (!post) return Response.json({ error: 'Post não encontrado.' }, { status: 404 });
+      revalidatePath('/noticias');
+      revalidatePath(`/noticias/${post.slug}`);
+      revalidatePath('/');
+      return Response.json({ post });
+    }
+
+    const post = await updateCmsPost(id, body);
     revalidatePath('/noticias');
     revalidatePath(`/noticias/${post.slug}`);
     revalidatePath('/');

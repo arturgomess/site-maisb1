@@ -34,7 +34,8 @@ export async function getArticles(): Promise<NewsArticle[]> {
   if (!db) return fallbackArticles;
   try {
     const articles = await db.post.findMany({ where: { status: 'published', publishedAt: { lte: new Date() } }, orderBy: { publishedAt: 'desc' }, select: articleSelect });
-    return articles.length ? articles.map(normalizeArticle) : fallbackArticles;
+    if (articles.length) return articles.map(normalizeArticle);
+    return await db.post.count() ? [] : fallbackArticles;
   } catch (error) {
     console.error('Database news query failed; using fallback content.', error);
     return fallbackArticles;
