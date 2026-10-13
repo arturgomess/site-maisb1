@@ -20,6 +20,7 @@ model Post {
   seoTitle      String?  @db.VarChar(60)
   seoDescription String? @db.VarChar(160)
   imagePath     String?  @db.VarChar(500)
+  imageCardPath String?  @db.VarChar(500)
   imageAlt      String?  @db.VarChar(180)
   imageCaption  String?  @db.VarChar(255)
   galleryJson   String?  @db.LongText
@@ -47,7 +48,6 @@ model SiteSettings {
 
   @@map("site_settings")
 }
-
 model AdminUser {
   id                   String            @id @default(cuid()) @db.VarChar(30)
   name                 String            @db.VarChar(160)
