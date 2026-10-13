@@ -1,13 +1,13 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import sharp from 'sharp';
-import { readFile, readdir, rename, rm } from 'node:fs/promises';
+import { mkdir, readFile, readdir, rename, rm } from 'node:fs/promises';
 import path from 'node:path';
 import { POST } from './route';
-import { isAdminAuthenticated } from '../../../../lib/cms-auth';
+import { getCurrentAdmin } from '../../../../lib/cms-auth';
 import { MAX_IMAGE_BYTES } from '../../../../lib/image-constants';
 
 vi.mock('../../../../lib/cms-auth', () => ({
-  isAdminAuthenticated: vi.fn(),
+  getCurrentAdmin: vi.fn(),
 }));
 vi.mock('node:fs/promises', async (importOriginal) => {
   const actual = await importOriginal<typeof import('node:fs/promises')>();
@@ -31,7 +31,21 @@ function makeRequest(file: File, destination = 'gallery') {
 }
 
 beforeEach(() => {
-  vi.mocked(isAdminAuthenticated).mockResolvedValue(true);
+  vi.mocked(getCurrentAdmin).mockResolvedValue({
+    id: 'admin-1',
+    name: 'Admin',
+    email: 'admin@example.com',
+    role: 'ADMIN',
+    canManagePosts: true,
+    canManageSettings: true,
+    canManageAccess: true,
+    isActive: true,
+    mustChangePassword: false,
+    lastAccessAt: null,
+    createdAt: new Date(),
+    updatedAt: new Date(),
+  });
+  return mkdir(uploadDirectory, { recursive: true });
 });
 
 afterEach(async () => {
@@ -80,7 +94,7 @@ describe('POST /api/admin/assets', () => {
   });
 
   it('rejects uploads when the CMS session is not authenticated', async () => {
-    vi.mocked(isAdminAuthenticated).mockResolvedValue(false);
+    vi.mocked(getCurrentAdmin).mockResolvedValue(null);
     const request = new Request('http://localhost/api/admin/assets', { method: 'POST' });
 
     expect((await POST(request)).status).toBe(401);

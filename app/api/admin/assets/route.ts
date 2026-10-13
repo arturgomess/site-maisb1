@@ -1,7 +1,7 @@
 import { mkdir, rename, rm, writeFile } from 'node:fs/promises';
 import path from 'node:path';
 import { randomUUID } from 'node:crypto';
-import { isAdminAuthenticated } from '../../../../lib/cms-auth';
+import { requireAdminPermission } from '../../../../lib/admin-api-auth';
 import { IMAGE_TOO_LARGE_MESSAGE, MAX_IMAGE_BYTES } from '../../../../lib/image-constants';
 import { ImageValidationError, optimizeImage, type ImageDestination } from '../../../../lib/image-optimization';
 
@@ -37,8 +37,8 @@ async function readBoundedBody(request: Request) {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
-
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   let formData: FormData;
   try {
     const body = await readBoundedBody(request);

@@ -1,0 +1,2 @@
+-- Marker for databases created by the legacy Prisma db push workflow.
+-- Existing tables and data stay in place; fresh installs are synchronized by db push after deploy.

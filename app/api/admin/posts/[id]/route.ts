@@ -1,18 +1,20 @@
 import { revalidatePath } from 'next/cache';
-import { isAdminAuthenticated } from '../../../../../lib/cms-auth';
+import { requireAdminPermission } from '../../../../../lib/admin-api-auth';
 import { deleteCmsPost, getCmsPost, updateCmsPost, updateCmsPostStatus } from '../../../../../lib/cms';
 
 export const runtime = 'nodejs';
 
 export async function GET(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   const { id } = await context.params;
   const post = await getCmsPost(id);
   return post ? Response.json({ post }) : Response.json({ error: 'Post não encontrado.' }, { status: 404 });
 }
 
 export async function PATCH(request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   const { id } = await context.params;
   try {
     const body = await request.json();
@@ -39,7 +41,8 @@ export async function PATCH(request: Request, context: { params: Promise<{ id: s
 }
 
 export async function DELETE(_request: Request, context: { params: Promise<{ id: string }> }) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   const { id } = await context.params;
   try {
     await deleteCmsPost(id);

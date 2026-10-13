@@ -48,3 +48,59 @@ model SiteSettings {
 
   @@map("site_settings")
 }
+model AdminUser {
+  id                   String            @id @default(cuid()) @db.VarChar(30)
+  name                 String            @db.VarChar(160)
+  email                String            @unique @db.VarChar(254)
+  passwordHash         String            @db.VarChar(255)
+  role                 String            @default("EDITOR") @db.VarChar(20)
+  canManagePosts       Boolean           @default(true)
+  canManageSettings    Boolean           @default(false)
+  canManageAccess      Boolean           @default(false)
+  isActive             Boolean           @default(true)
+  mustChangePassword   Boolean           @default(false)
+  lastAccessAt         DateTime?
+  createdAt            DateTime          @default(now())
+  updatedAt            DateTime          @updatedAt
+  sessions             AdminSession[]
+  auditEventsAsActor   AdminAuditEvent[] @relation("AdminAuditActor")
+  auditEventsAsTarget  AdminAuditEvent[] @relation("AdminAuditTarget")
+
+  @@index([isActive, role])
+  @@index([name])
+  @@map("admin_users")
+}
+
+model AdminSession {
+  id        String    @id @default(cuid()) @db.VarChar(30)
+  tokenHash String    @unique @db.Char(64)
+  userId    String    @db.VarChar(30)
+  createdAt DateTime  @default(now())
+  expiresAt DateTime
+  user      AdminUser @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@index([userId, expiresAt])
+  @@map("admin_sessions")
+}
+
+model AdminAuditEvent {
+  id         String     @id @default(cuid()) @db.VarChar(30)
+  targetId   String?    @db.VarChar(30)
+  actorId    String?    @db.VarChar(30)
+  action     String     @db.VarChar(60)
+  details    String?    @db.LongText
+  createdAt  DateTime   @default(now())
+  actor      AdminUser? @relation("AdminAuditActor", fields: [actorId], references: [id], onDelete: SetNull)
+  target     AdminUser? @relation("AdminAuditTarget", fields: [targetId], references: [id], onDelete: SetNull)
+
+  @@index([targetId, createdAt])
+  @@index([actorId, createdAt])
+  @@map("admin_audit_events")
+}
+
+model AdminBootstrap {
+  id     Int       @id @default(1)
+  usedAt DateTime?
+
+  @@map("admin_bootstrap")
+}

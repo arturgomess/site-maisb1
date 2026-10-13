@@ -17,7 +17,7 @@ const article: NewsArticle = {
 
 describe('ArticleView image rendering', () => {
   it('reserves the hero dimensions and keeps the cover eager for the first viewport', () => {
-    const { container } = render(<ArticleView article={article} related={[]} />);
+    const { container } = render(<ArticleView article={article} related={[]} shareUrl="http://localhost/noticias/materia" />);
     const cover = container.querySelector('.article-cover-img');
 
     expect(cover?.getAttribute('src')).toBe('/uploads/cover.webp');
@@ -27,7 +27,7 @@ describe('ArticleView image rendering', () => {
   });
 
   it('reserves gallery dimensions and lazy loads gallery and body images', () => {
-    const { container } = render(<ArticleView article={article} related={[]} />);
+    const { container } = render(<ArticleView article={article} related={[]} shareUrl="http://localhost/noticias/materia" />);
     const gallery = container.querySelector('.article-gallery-item img');
     const body = container.querySelector('.article-rich-html img');
 

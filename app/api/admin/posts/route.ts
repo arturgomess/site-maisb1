@@ -1,11 +1,12 @@
 import { revalidatePath } from 'next/cache';
-import { isAdminAuthenticated } from '../../../../lib/cms-auth';
+import { requireAdminPermission } from '../../../../lib/admin-api-auth';
 import { cmsAvailable, createCmsPost, listCmsPosts } from '../../../../lib/cms';
 
 export const runtime = 'nodejs';
 
 export async function GET() {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   try {
     return Response.json({ posts: await listCmsPosts(), storage: cmsAvailable() ? 'mysql' : 'unconfigured' });
   } catch (error) {
@@ -14,7 +15,8 @@ export async function GET() {
 }
 
 export async function POST(request: Request) {
-  if (!(await isAdminAuthenticated())) return Response.json({ error: 'Não autenticado.' }, { status: 401 });
+  const access = await requireAdminPermission('posts');
+  if (access.response) return access.response;
   try {
     const post = await createCmsPost(await request.json());
     revalidatePath('/noticias');
