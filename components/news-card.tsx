@@ -14,7 +14,7 @@ export function NewsCard({ article }: { article: NewsArticle }) {
   return (
     <article className="news-card">
       <Link href={`/noticias/${article.slug}`} className="news-card-thumb-wrap" aria-label={article.title}>
-        {article.imagePath ? <img className="news-card-thumb" src={article.imagePath} alt="" loading="lazy" /> : null}
+        {article.imageCardPath || article.imagePath ? <img className="news-card-thumb" src={article.imageCardPath || article.imagePath} alt="" width={600} height={400} loading="lazy" decoding="async" /> : null}
       </Link>
       <div className="news-card-body">
         <div className="news-card-meta"><span>{formatDate(article.publishedAt)}</span></div>

@@ -17,6 +17,7 @@ export type CmsPostInput = {
   seoTitle: string;
   seoDescription: string;
   imagePath?: string;
+  imageCardPath?: string;
   imageAlt: string;
   imageCaption: string;
   gallery: GalleryImage[];
@@ -35,10 +36,10 @@ const normalizeGallery = (value: unknown): GalleryImage[] => {
   if (!Array.isArray(value)) return [];
   return value.slice(0, 12).flatMap((item) => {
     if (!item || typeof item !== 'object') return [];
-    const candidate = item as { url?: unknown; alt?: unknown; caption?: unknown };
+    const candidate = item as { url?: unknown; alt?: unknown; caption?: unknown; width?: unknown; height?: unknown };
     const url = typeof candidate.url === 'string' ? candidate.url.trim() : '';
     if (!url || (!/^\/(?:uploads|assets)\//.test(url) && !/^https?:\/\//i.test(url))) return [];
-    return [{ url, alt: typeof candidate.alt === 'string' ? candidate.alt.trim().slice(0, 180) : '', caption: typeof candidate.caption === 'string' ? candidate.caption.trim().slice(0, 255) : '' }];
+    return [{ url, ...(Number.isSafeInteger(candidate.width) && Number(candidate.width) > 0 ? { width: Number(candidate.width) } : {}), ...(Number.isSafeInteger(candidate.height) && Number(candidate.height) > 0 ? { height: Number(candidate.height) } : {}), alt: typeof candidate.alt === 'string' ? candidate.alt.trim().slice(0, 180) : '', caption: typeof candidate.caption === 'string' ? candidate.caption.trim().slice(0, 255) : '' }];
   });
 };
 
@@ -49,7 +50,10 @@ const parseGallery = (value: string | null | undefined) => {
 
 export const cleanHtml = (html: string) => normalizeHtmlSpaces(sanitizeHtml(normalizeHtmlSpaces(html), {
   allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'u', 'img']),
-  allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height'] },
+  allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height', 'loading', 'decoding'] },
+  transformTags: {
+    img: (tagName, attributes) => ({ tagName, attribs: { ...attributes, loading: 'lazy', decoding: 'async' } }),
+  },
 }));
 
 export function cmsAvailable() {
@@ -78,6 +82,7 @@ function ensureInput(input: Partial<CmsPostInput>): CmsPostInput {
     seoTitle: String(input.seoTitle || title).trim().slice(0, 60),
     seoDescription: String(input.seoDescription || excerpt).trim().slice(0, 160),
     imagePath: input.imagePath ? String(input.imagePath) : undefined,
+    imageCardPath: input.imageCardPath ? String(input.imageCardPath) : undefined,
     imageAlt: String(input.imageAlt || title).trim(),
     imageCaption: String(input.imageCaption || '').trim(),
     gallery: normalizeGallery(input.gallery),
@@ -87,7 +92,7 @@ function ensureInput(input: Partial<CmsPostInput>): CmsPostInput {
 
 function toCmsPost(post: {
   id: string; slug: string; title: string; category: string; publishedAt: Date; excerpt: string; author: string;
-  bodyHtml: string; status: string; seoTitle: string | null; seoDescription: string | null; imagePath: string | null;
+  bodyHtml: string; status: string; seoTitle: string | null; seoDescription: string | null; imagePath: string | null; imageCardPath: string | null;
   imageAlt: string | null; imageCaption: string | null; galleryJson: string | null; noIndex: boolean; createdAt?: Date; updatedAt?: Date;
 }): CmsPost {
   return {
@@ -103,6 +108,7 @@ function toCmsPost(post: {
     seoTitle: post.seoTitle || post.title,
     seoDescription: post.seoDescription || post.excerpt,
     imagePath: post.imagePath || undefined,
+    imageCardPath: post.imageCardPath || undefined,
     imageAlt: post.imageAlt || '',
     imageCaption: post.imageCaption || '',
     gallery: parseGallery(post.galleryJson),
@@ -114,7 +120,7 @@ function toCmsPost(post: {
 
 const postSelect = {
   id: true, slug: true, title: true, category: true, publishedAt: true, excerpt: true, author: true,
-  bodyHtml: true, status: true, seoTitle: true, seoDescription: true, imagePath: true, imageAlt: true,
+  bodyHtml: true, status: true, seoTitle: true, seoDescription: true, imagePath: true, imageCardPath: true, imageAlt: true,
   imageCaption: true, galleryJson: true, noIndex: true, createdAt: true, updatedAt: true,
 } as const;
 

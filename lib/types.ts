@@ -1,5 +1,7 @@
 export type GalleryImage = {
   url: string;
+  width?: number;
+  height?: number;
   alt?: string;
   caption?: string;
 };
@@ -12,6 +14,7 @@ export type NewsArticle = {
   publishedAt: string;
   excerpt: string;
   imagePath?: string;
+  imageCardPath?: string;
   imageAlt?: string;
   imageCaption?: string;
   gallery?: GalleryImage[];
