@@ -1,7 +1,7 @@
 'use client';
 
 import { FormEvent, useEffect, useState } from 'react';
-import { ArrowRight, LoaderCircle, LockKeyhole } from 'lucide-react';
+import { ArrowRight, LoaderCircle } from 'lucide-react';
 import { useRouter } from 'next/navigation';
 import { Button } from '../ui/button';
 import { Input } from '../ui/input';
@@ -66,10 +66,21 @@ export function AdminLogin() {
 
   if (checking) return <main className="grid min-h-screen place-items-center bg-[#120e0e] text-[#c49a45]"><LoaderCircle className="animate-spin" aria-label="Verificando autenticação" /></main>;
 
-  return <main className="min-h-screen bg-[#120e0e] px-5 py-10 text-white"><div className="mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_420px]">
-    <div className="hidden lg:block"><span className="mb-5 block text-xs font-bold uppercase tracking-[0.22em] text-[#c49a45]">Área restrita</span><h1 className="max-w-xl font-serif text-6xl leading-[0.98]">Conteúdo que mantém a marca em movimento.</h1><p className="mt-6 max-w-lg text-lg leading-8 text-white/60">O painel editorial do Grupo +B centraliza publicação, SEO, imagens e distribuição das matérias.</p></div>
-    <form noValidate onSubmit={submit} className="rounded-3xl border border-white/10 bg-[#191616] p-8 shadow-2xl sm:p-10">
-      <div className="mb-8 flex items-center gap-3"><div className="grid h-12 w-12 place-items-center rounded-2xl bg-[#c49a45] text-[#120e0e]"><LockKeyhole size={22} /></div><div><p className="font-bold">Painel editorial</p><p className="text-xs text-white/50">Grupo Mais Barato</p></div></div>
+  return <main className="relative min-h-screen overflow-hidden bg-[#120e0e] px-5 py-10 text-white">
+    <video className="pointer-events-none absolute inset-0 h-full w-full object-cover opacity-45" autoPlay muted loop playsInline preload="metadata" aria-hidden="true">
+      <source src="/assets/Videos/Supermercado Mais B - Institucional.mp4" type="video/mp4" />
+    </video>
+    <div className="pointer-events-none absolute inset-0 bg-[#120e0e]/75" aria-hidden="true" />
+    <div className="pointer-events-none absolute inset-0 bg-[radial-gradient(circle_at_78%_52%,rgba(196,154,69,0.16),transparent_34%)]" aria-hidden="true" />
+    <div className="relative z-10 mx-auto grid min-h-[calc(100vh-5rem)] max-w-6xl items-center gap-12 lg:grid-cols-[1.1fr_420px]">
+    <div className="hidden lg:block"><span className="mb-5 block text-xs font-bold uppercase tracking-[0.22em] text-[#c49a45]">Área restrita</span><h1 className="max-w-xl font-serif text-6xl leading-[0.98]">Conteúdo que mantém a marca em movimento.</h1></div>
+    <form noValidate onSubmit={submit} className="rounded-3xl border border-white/10 bg-[#191616]/95 p-8 shadow-2xl backdrop-blur-sm sm:p-10">
+      <div className="mb-8 text-center">
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img src="/assets/Logo Marca Grupo MaisB/Logo Grupo Mais Barato (White Monoegativo).webp" alt="Grupo Mais Barato" className="mx-auto h-16 w-[166.8px] max-w-full object-contain" />
+        <p className="mt-3 font-bold">Painel editorial</p>
+        <p className="text-xs text-white/50">Grupo Mais Barato</p>
+      </div>
       <h2 className="text-2xl font-bold">{isBootstrap ? 'Ativar conta administrativa' : 'Entrar no CMS'}</h2>
       <p className="mt-2 text-sm leading-6 text-white/55">{isBootstrap ? 'Use a senha atual do painel para criar a conta individual do administrador principal.' : 'Entre com o e-mail e a senha da sua conta.'}</p>
       {!status?.configured && <p role="alert" className="mt-4 rounded-xl border border-[#f29a92]/30 bg-[#9f342d]/20 px-3 py-2 text-sm text-[#f29a92]">Banco de dados indisponível. O acesso ao painel não pode ser validado agora.</p>}
