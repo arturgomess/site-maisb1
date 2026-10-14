@@ -27,13 +27,13 @@ export async function POST(request: Request, context: { params: Promise<{ id: st
   try {
     const passwordHash = await hashAdminPassword(password);
     await db.$transaction(async (transaction) => {
-      await transaction.adminUser.update({ where: { id }, data: { passwordHash, mustChangePassword: true } });
+      await transaction.adminUser.update({ where: { id }, data: { passwordHash, mustChangePassword: false } });
       await transaction.adminSession.deleteMany({ where: { userId: id } });
       await transaction.adminAuditEvent.create({
-        data: { actorId: access.user.id, targetId: id, action: 'PASSWORD_RESET', details: JSON.stringify({ mustChangePassword: true }) },
+        data: { actorId: access.user.id, targetId: id, action: 'PASSWORD_RESET', details: JSON.stringify({ mustChangePassword: false }) },
       });
     });
-    return Response.json({ passwordReset: true, mustChangePassword: true, sessionsRevoked: true });
+    return Response.json({ passwordReset: true, mustChangePassword: false, sessionsRevoked: true });
   } catch {
     return Response.json({ error: 'Não foi possível redefinir a senha.' }, { status: 500 });
   }

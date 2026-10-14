@@ -13,8 +13,8 @@ describe('admin API authorization', () => {
     expect(authorizeAdminRequest(null, 'posts')).toBe('unauthenticated');
   });
 
-  it('restricts temporary-password sessions to password change', () => {
-    expect(authorizeAdminRequest({ ...editor, mustChangePassword: true }, 'posts')).toBe('password-change-required');
+  it('allows the password assigned by the administrator without a forced password-change gate', () => {
+    expect(authorizeAdminRequest({ ...editor, mustChangePassword: true }, 'posts')).toBe('allowed');
   });
 
   it('denies a direct request for an area the account cannot access', () => {

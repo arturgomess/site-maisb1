@@ -1,5 +1,5 @@
 import { cookies } from 'next/headers';
-import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { canGrantPermissions, type AdminPermissions } from './admin-access';
 import { hashAdminPassword, hashSessionToken, verifyAdminPassword } from './admin-auth-crypto';
 import { db } from './db';
@@ -25,23 +25,6 @@ export type AdminSessionUser = {
 
 export function getAdminPermissions(user: Pick<AdminSessionUser, 'canManagePosts' | 'canManageSettings' | 'canManageAccess'>): AdminPermissions {
   return { posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess };
-}
-
-export function verifyLegacyAdminPassword(password: string) {
-  const expected = process.env.CMS_ADMIN_PASSWORD || '';
-  if (!expected || !password) return false;
-  const received = Buffer.from(password);
-  const stored = Buffer.from(expected);
-  return received.length === stored.length && timingSafeEqual(received, stored);
-}
-
-export async function getBootstrapStatus() {
-  if (!db || !process.env.CMS_ADMIN_PASSWORD) return false;
-  const [usersCount, bootstrap] = await Promise.all([
-    db.adminUser.count(),
-    db.adminBootstrap.findUnique({ where: { id: 1 } }),
-  ]);
-  return usersCount === 0 && !bootstrap?.usedAt;
 }
 
 export function isCmsConfigured() {
@@ -84,7 +67,7 @@ export async function getCurrentAdmin(): Promise<AdminSessionUser | null> {
 
 export async function isAdminAuthenticated(permission?: keyof AdminPermissions) {
   const user = await getCurrentAdmin();
-  if (!user || user.mustChangePassword) return false;
+  if (!user) return false;
   if (!permission) return true;
   const permissions = getAdminPermissions(user);
   return permissions[permission];

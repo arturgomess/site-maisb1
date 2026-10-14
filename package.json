@@ -12,7 +12,8 @@
     "db:migrate": "node prisma/prepare-migrations.mjs && prisma migrate deploy",
     "db:push": "prisma db push",
     "db:seed": "node --env-file=.env prisma/seed.mjs",
-    "db:setup": "npm run db:migrate && prisma db push && npm run db:seed"
+    "db:setup": "npm run db:migrate && prisma db push && npm run db:seed",
+    "admin:bootstrap": "node --env-file-if-exists=.env scripts/bootstrap-admin.mjs"
   },
   "dependencies": {
     "@next/third-parties": "16.3.2",

@@ -102,7 +102,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         where: { id },
         data: {
           name, email, role, canManagePosts: permissions.posts, canManageSettings: permissions.settings, canManageAccess: permissions.access, isActive,
-          ...(passwordHash ? { passwordHash, mustChangePassword: true } : {}),
+          ...(passwordHash ? { passwordHash, mustChangePassword: false } : {}),
         },
       });
       if (revokeSessions) await transaction.adminSession.deleteMany({ where: { userId: id } });
@@ -116,7 +116,7 @@ export async function PATCH(request: Request, context: RouteContext) {
         data: { actorId: access.user.id, targetId: id, action: isActive ? 'ACCOUNT_ACTIVATED' : 'ACCOUNT_DEACTIVATED', details: JSON.stringify({ isActive }) },
       });
       if (hasPasswordReset) await transaction.adminAuditEvent.create({
-        data: { actorId: access.user.id, targetId: id, action: 'PASSWORD_RESET', details: JSON.stringify({ mustChangePassword: true }) },
+        data: { actorId: access.user.id, targetId: id, action: 'PASSWORD_RESET', details: JSON.stringify({ mustChangePassword: false }) },
       });
       return saved;
     }, { isolationLevel: Prisma.TransactionIsolationLevel.Serializable });
