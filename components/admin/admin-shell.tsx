@@ -3,7 +3,7 @@
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { ExternalLink, FileText, LogOut, Menu, SlidersHorizontal, X } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 
 const navItems = [
   { href: '/admin/posts', label: 'Publicações', icon: FileText },
@@ -15,12 +15,33 @@ export function AdminShell({ children }: { children: React.ReactNode }) {
   const router = useRouter();
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+
+    const scrollY = window.scrollY;
+    const originalBodyStyle = document.body.getAttribute('style');
+    Object.assign(document.body.style, {
+      position: 'fixed',
+      top: `-${scrollY}px`,
+      left: '0',
+      right: '0',
+      width: '100%',
+      overflow: 'hidden',
+    });
+
+    return () => {
+      if (originalBodyStyle === null) document.body.removeAttribute('style');
+      else document.body.setAttribute('style', originalBodyStyle);
+      window.scrollTo(0, scrollY);
+    };
+  }, [open]);
+
   const logout = async () => { await fetch('/api/admin/session', { method: 'DELETE' }); router.push('/admin/login'); };
 
   return <div className="admin-shell flex min-h-screen">
     <div className={`fixed inset-0 z-40 bg-[#120e0e]/40 lg:hidden ${open ? 'block' : 'hidden'}`} onClick={() => setOpen(false)} />
     <aside className={`admin-sidebar group/sidebar fixed inset-y-0 left-0 z-50 flex w-[270px] flex-col text-white transition-transform lg:fixed lg:inset-y-0 lg:top-0 lg:h-screen lg:w-[72px] lg:flex-none lg:translate-x-0 ${open ? 'translate-x-0' : '-translate-x-full'}`}>
-      <div className="admin-sidebar-inner absolute inset-y-0 left-0 flex w-[270px] flex-col border-r border-white/10 bg-[#120e0e] text-white shadow-[12px_0_30px_rgba(18,14,14,0.12)] transition-[width] duration-300 lg:w-[72px] lg:group-hover/sidebar:w-[270px]">
+      <div className="admin-sidebar-inner absolute inset-y-0 left-0 flex w-[270px] flex-col overflow-y-auto overscroll-y-contain border-r border-white/10 bg-[#120e0e] text-white shadow-[12px_0_30px_rgba(18,14,14,0.12)] transition-[width] duration-300 lg:w-[72px] lg:group-hover/sidebar:w-[270px]">
       <div className="flex h-[72px] items-center justify-between border-b border-white/10 px-4">
         <Link href="/admin/posts" className="flex min-w-0 items-center justify-center gap-3 lg:group-hover/sidebar:justify-start" onClick={() => setOpen(false)}>
           {/* eslint-disable-next-line @next/next/no-img-element */}
