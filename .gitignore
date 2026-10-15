@@ -8,6 +8,11 @@ Thumbs.db
 .env.*
 !.env.example
 
+# Backups locais e dumps de banco nunca devem ser versionados
+/backups/
+*.sql
+*.sql.gz
+
 # Índice local do CodeGraph
 .codegraph/
 

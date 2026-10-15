@@ -12,11 +12,11 @@ const fallbackArticles: NewsArticle[] = [
 
 const fallbackSettings: SiteSettings = { siteName: 'Grupo Mais Barato', defaultTitle: 'Grupo Mais Barato | Varejo, cuidado e experiências', defaultDescription: 'O Grupo Mais Barato reúne negócios que fazem parte do dia a dia das pessoas de Belém-PA.', defaultKeywords: ['Grupo Mais Barato', 'Grupo +B', 'Belém', 'varejo paraense'], googleAnalyticsId: process.env.NEXT_PUBLIC_GA_MEASUREMENT_ID, robotsIndex: true };
 
-const articleSelect = { id: true, slug: true, title: true, category: true, publishedAt: true, excerpt: true, author: true, bodyHtml: true, status: true, seoTitle: true, seoDescription: true, imagePath: true, imageAlt: true, imageCaption: true, galleryJson: true, noIndex: true } as const;
+const articleSelect = { id: true, slug: true, title: true, category: true, publishedAt: true, excerpt: true, author: true, bodyHtml: true, status: true, seoTitle: true, seoDescription: true, imagePath: true, imageCardPath: true, imageAlt: true, imageCaption: true, galleryJson: true, noIndex: true } as const;
 
 const normalizeHtmlSpaces = (html: string) => html.replace(/&nbsp;/gi, ' ').replace(/\u00a0/g, ' ');
 
-function normalizeArticle(article: { id: string; slug: string; title: string; category: string; publishedAt: Date; excerpt: string; author: string; bodyHtml: string; status: string; seoTitle: string | null; seoDescription: string | null; imagePath: string | null; imageAlt: string | null; imageCaption: string | null; galleryJson: string | null; noIndex: boolean }): NewsArticle {
+export function normalizeArticle(article: { id: string; slug: string; title: string; category: string; publishedAt: Date; excerpt: string; author: string; bodyHtml: string; status: string; seoTitle: string | null; seoDescription: string | null; imagePath: string | null; imageCardPath: string | null; imageAlt: string | null; imageCaption: string | null; galleryJson: string | null; noIndex: boolean }): NewsArticle {
   let gallery: GalleryImage[] = [];
   try {
     const parsed = article.galleryJson ? JSON.parse(article.galleryJson) : [];
@@ -24,17 +24,19 @@ function normalizeArticle(article: { id: string; slug: string; title: string; ca
       if (!item || typeof item !== 'object' || typeof (item as { url?: unknown }).url !== 'string') return [];
       const candidate = item as { url: string; alt?: unknown; caption?: unknown };
       if (!/^\/(?:uploads|assets)\//.test(candidate.url) && !/^https?:\/\//i.test(candidate.url)) return [];
-      return [{ url: candidate.url, alt: typeof candidate.alt === 'string' ? candidate.alt : '', caption: typeof candidate.caption === 'string' ? candidate.caption : '' }];
+      const dimensions = candidate as { width?: unknown; height?: unknown };
+      return [{ url: candidate.url, ...(Number.isSafeInteger(dimensions.width) && Number(dimensions.width) > 0 ? { width: Number(dimensions.width) } : {}), ...(Number.isSafeInteger(dimensions.height) && Number(dimensions.height) > 0 ? { height: Number(dimensions.height) } : {}), alt: typeof candidate.alt === 'string' ? candidate.alt : '', caption: typeof candidate.caption === 'string' ? candidate.caption : '' }];
     }) : [];
   } catch { gallery = []; }
-  return { id: article.id, slug: article.slug, title: article.title, category: article.category, publishedAt: article.publishedAt.toISOString(), excerpt: article.excerpt, imagePath: article.imagePath || undefined, author: article.author, imageAlt: article.imageAlt || undefined, imageCaption: article.imageCaption || undefined, gallery, body: [], bodyHtml: normalizeHtmlSpaces(sanitizeHtml(normalizeHtmlSpaces(article.bodyHtml), { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'u', 'img']), allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height'] } })), status: article.status === 'draft' ? 'draft' : 'published', seoTitle: article.seoTitle || undefined, seoDescription: article.seoDescription || undefined, noIndex: article.noIndex };
+  return { id: article.id, slug: article.slug, title: article.title, category: article.category, publishedAt: article.publishedAt.toISOString(), excerpt: article.excerpt, imagePath: article.imagePath || undefined, imageCardPath: article.imageCardPath || undefined, author: article.author, imageAlt: article.imageAlt || undefined, imageCaption: article.imageCaption || undefined, gallery, body: [], bodyHtml: normalizeHtmlSpaces(sanitizeHtml(normalizeHtmlSpaces(article.bodyHtml), { allowedTags: sanitizeHtml.defaults.allowedTags.concat(['h1', 'h2', 'h3', 'u', 'img']), allowedAttributes: { ...sanitizeHtml.defaults.allowedAttributes, a: ['href', 'target', 'rel'], img: ['src', 'alt', 'width', 'height', 'loading', 'decoding'] }, transformTags: { img: (tagName, attributes) => ({ tagName, attribs: { ...attributes, loading: 'lazy', decoding: 'async' } }) } })), status: article.status === 'draft' ? 'draft' : 'published', seoTitle: article.seoTitle || undefined, seoDescription: article.seoDescription || undefined, noIndex: article.noIndex };
 }
 
 export async function getArticles(): Promise<NewsArticle[]> {
   if (!db) return fallbackArticles;
   try {
     const articles = await db.post.findMany({ where: { status: 'published', publishedAt: { lte: new Date() } }, orderBy: { publishedAt: 'desc' }, select: articleSelect });
-    return articles.length ? articles.map(normalizeArticle) : fallbackArticles;
+    if (articles.length) return articles.map(normalizeArticle);
+    return await db.post.count() ? [] : fallbackArticles;
   } catch (error) {
     console.error('Database news query failed; using fallback content.', error);
     return fallbackArticles;

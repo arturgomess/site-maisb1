@@ -1,22 +1,33 @@
-import { createHmac, timingSafeEqual } from 'node:crypto';
 import { cookies } from 'next/headers';
+import { randomBytes, timingSafeEqual } from 'node:crypto';
+import { canGrantPermissions, type AdminPermissions } from './admin-access';
+import { hashAdminPassword, hashSessionToken, verifyAdminPassword } from './admin-auth-crypto';
+import { db } from './db';
 
 export const CMS_COOKIE = 'cms_session';
-const MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+export const ADMIN_SESSION_MAX_AGE_SECONDS = 60 * 60 * 24 * 7;
+const ADMIN_SESSION_MAX_AGE_MS = ADMIN_SESSION_MAX_AGE_SECONDS * 1000;
 
-function secret() {
-  return process.env.CMS_SESSION_SECRET || process.env.REVALIDATE_SECRET || '';
+export type AdminSessionUser = {
+  id: string;
+  name: string;
+  email: string;
+  role: string;
+  canManagePosts: boolean;
+  canManageSettings: boolean;
+  canManageAccess: boolean;
+  isActive: boolean;
+  mustChangePassword: boolean;
+  lastAccessAt: Date | null;
+  createdAt: Date;
+  updatedAt: Date;
+};
+
+export function getAdminPermissions(user: Pick<AdminSessionUser, 'canManagePosts' | 'canManageSettings' | 'canManageAccess'>): AdminPermissions {
+  return { posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess };
 }
 
-function sign(value: string) {
-  return createHmac('sha256', secret()).update(value).digest('base64url');
-}
-
-export function isCmsConfigured() {
-  return Boolean(process.env.CMS_ADMIN_PASSWORD && secret());
-}
-
-export function verifyAdminPassword(password: string) {
+export function verifyLegacyAdminPassword(password: string) {
   const expected = process.env.CMS_ADMIN_PASSWORD || '';
   if (!expected || !password) return false;
   const received = Buffer.from(password);
@@ -24,22 +35,71 @@ export function verifyAdminPassword(password: string) {
   return received.length === stored.length && timingSafeEqual(received, stored);
 }
 
-export function createCmsToken() {
-  const payload = `${Date.now()}`;
-  return `${payload}.${sign(payload)}`;
+export async function getBootstrapStatus() {
+  if (!db || !process.env.CMS_ADMIN_PASSWORD) return false;
+  const [usersCount, bootstrap] = await Promise.all([
+    db.adminUser.count(),
+    db.adminBootstrap.findUnique({ where: { id: 1 } }),
+  ]);
+  return usersCount === 0 && !bootstrap?.usedAt;
 }
 
-export function isValidCmsToken(token?: string) {
-  if (!token || !secret()) return false;
-  const [payload, signature] = token.split('.');
-  if (!payload || !signature || Date.now() - Number(payload) > MAX_AGE_SECONDS * 1000) return false;
-  const expected = sign(payload);
-  const received = Buffer.from(signature);
-  const stored = Buffer.from(expected);
-  return received.length === stored.length && timingSafeEqual(received, stored);
+export function isCmsConfigured() {
+  return Boolean(db);
 }
 
-export async function isAdminAuthenticated() {
-  const cookieStore = await cookies();
-  return isValidCmsToken(cookieStore.get(CMS_COOKIE)?.value);
+export async function createAdminSession(userId: string) {
+  if (!db) throw new Error('Banco de dados indisponível.');
+  const token = randomBytes(32).toString('base64url');
+  const expiresAt = new Date(Date.now() + ADMIN_SESSION_MAX_AGE_MS);
+  await db.adminSession.create({
+    data: { tokenHash: hashSessionToken(token), userId, expiresAt },
+  });
+  return token;
 }
+
+export async function setAdminSessionCookie(token: string) {
+  (await cookies()).set(CMS_COOKIE, token, {
+    httpOnly: true,
+    sameSite: 'lax',
+    secure: process.env.NODE_ENV === 'production',
+    maxAge: ADMIN_SESSION_MAX_AGE_SECONDS,
+    path: '/',
+  });
+}
+
+export async function getCurrentAdmin(): Promise<AdminSessionUser | null> {
+  if (!db) return null;
+  const token = (await cookies()).get(CMS_COOKIE)?.value;
+  if (!token || token.length > 128) return null;
+
+  const session = await db.adminSession.findUnique({
+    where: { tokenHash: hashSessionToken(token) },
+    include: { user: true },
+  });
+  if (!session || session.expiresAt.getTime() <= Date.now() || !session.user.isActive) return null;
+  const { passwordHash: _passwordHash, ...user } = session.user;
+  return user;
+}
+
+export async function isAdminAuthenticated(permission?: keyof AdminPermissions) {
+  const user = await getCurrentAdmin();
+  if (!user || user.mustChangePassword) return false;
+  if (!permission) return true;
+  const permissions = getAdminPermissions(user);
+  return permissions[permission];
+}
+
+export async function clearCurrentAdminSession() {
+  if (!db) return;
+  const token = (await cookies()).get(CMS_COOKIE)?.value;
+  if (!token) return;
+  await db.adminSession.deleteMany({ where: { tokenHash: hashSessionToken(token) } });
+}
+
+export async function hashNewPassword(password: string) {
+  return hashAdminPassword(password);
+}
+
+export { verifyAdminPassword };
+export { canGrantPermissions };

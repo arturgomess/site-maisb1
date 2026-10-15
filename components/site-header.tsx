@@ -8,7 +8,37 @@ const asset = (path: string) => `/assets/${path}`;
 
 export function SiteHeader() {
   const [menuOpen, setMenuOpen] = useState(false);
+  const [contactsMenuOpen, setContactsMenuOpen] = useState(false);
   const menuToggleRef = useRef<HTMLButtonElement>(null);
+  const contactsCloseTimeoutRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+  const openContactsMenu = () => {
+    if (contactsCloseTimeoutRef.current) {
+      clearTimeout(contactsCloseTimeoutRef.current);
+      contactsCloseTimeoutRef.current = null;
+    }
+    setContactsMenuOpen(true);
+  };
+
+  const scheduleContactsMenuClose = () => {
+    if (contactsCloseTimeoutRef.current) clearTimeout(contactsCloseTimeoutRef.current);
+    contactsCloseTimeoutRef.current = setTimeout(() => {
+      setContactsMenuOpen(false);
+      contactsCloseTimeoutRef.current = null;
+    }, 200);
+  };
+
+  const closeContactsMenu = () => {
+    if (contactsCloseTimeoutRef.current) {
+      clearTimeout(contactsCloseTimeoutRef.current);
+      contactsCloseTimeoutRef.current = null;
+    }
+    setContactsMenuOpen(false);
+  };
+
+  useEffect(() => () => {
+    if (contactsCloseTimeoutRef.current) clearTimeout(contactsCloseTimeoutRef.current);
+  }, []);
 
   useEffect(() => {
     const header = document.getElementById('topo');
@@ -81,11 +111,15 @@ export function SiteHeader() {
             ))}
           </div>
         </div>
-        <div className="dropdown contacts-dropdown">
+        <div
+          className={`dropdown contacts-dropdown ${contactsMenuOpen ? 'is-open' : ''}`}
+          onMouseEnter={openContactsMenu}
+          onMouseLeave={scheduleContactsMenuClose}
+        >
           <a id="menu-link-contato" href="/#contato" className="drop-link btn-header-contact" aria-haspopup="true" aria-label="Contato e submenu" onClick={() => setMenuOpen(false)}>Contato</a>
           <div className="drop-panel" aria-label="Submenu Contatos">
-            <a id="menu-link-unidades" href="/#store-locator-teaser" onClick={() => setMenuOpen(false)}>Nossas Unidades</a>
-            <a id="menu-link-trabalhe" href="https://grupomaisbarato.portaldetalentos.senior.com.br/" target="_blank" rel="noopener">Trabalhe Conosco</a>
+            <a id="menu-link-unidades" href="/#store-locator-teaser" onClick={() => { closeContactsMenu(); setMenuOpen(false); }}>Nossas Unidades</a>
+            <a id="menu-link-trabalhe" href="https://grupomaisbarato.portaldetalentos.senior.com.br/" target="_blank" rel="noopener" onClick={() => { closeContactsMenu(); setMenuOpen(false); }}>Trabalhe Conosco</a>
           </div>
         </div>
       </nav>

@@ -26,9 +26,10 @@ COPY --from=builder /app/.next/static ./.next/static
 COPY --from=builder /app/public ./public
 COPY --from=builder /app/assets ./assets
 COPY --from=builder /app/prisma ./prisma
-COPY --from=builder /app/node_modules/@prisma ./node_modules/@prisma
-COPY --from=builder /app/node_modules/prisma ./node_modules/prisma
-COPY --from=builder /app/node_modules/.bin ./node_modules/.bin
+# The production entrypoint runs Prisma migrations before starting Next.js.
+# Copy the complete installed tree so Prisma's transitive runtime dependencies
+# (for example `effect`) are available in the standalone image.
+COPY --from=builder /app/node_modules ./node_modules
 COPY --from=builder /app/docker/entrypoint.sh ./docker/entrypoint.sh
 
 RUN mkdir -p /app/public/uploads \

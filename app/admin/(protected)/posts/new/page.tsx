@@ -1,5 +1,11 @@
+import { redirect } from 'next/navigation';
 import { PostEditor } from '../../../../../components/admin/post-editor';
+import { AdminForbidden } from '../../../../../components/admin/admin-forbidden';
+import { getCurrentAdmin } from '../../../../../lib/cms-auth';
 
-export default function NewPostPage() {
+export default async function NewPostPage() {
+  const user = await getCurrentAdmin();
+  if (!user) redirect('/admin/login');
+  if (!user.canManagePosts) return <AdminForbidden user={user} />;
   return <PostEditor />;
 }

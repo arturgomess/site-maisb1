@@ -1,30 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { Badge, CalendarDays, Clock3, Copy, MessageCircle, UserRound, X } from 'lucide-react';
-import { Fragment, useState } from 'react';
+import { CalendarDays, Clock3, UserRound } from 'lucide-react';
+import { Fragment } from 'react';
 import type { NewsArticle } from '../lib/types';
 import { NewsCard } from './news-card';
+import { ArticleShare } from './article-share';
 
-function ShareIcon({ type }: { type: 'whatsapp' | 'linkedin' | 'x' | 'copy' }) {
-  if (type === 'whatsapp') return <MessageCircle size={17} />;
-  if (type === 'linkedin') return <Badge size={17} />;
-  if (type === 'x') return <X size={17} />;
-  return <Copy size={17} />;
-}
-
-export function ArticleView({ article, related }: { article: NewsArticle; related: NewsArticle[] }) {
-  const [copied, setCopied] = useState(false);
+export function ArticleView({ article, related, shareUrl }: { article: NewsArticle; related: NewsArticle[]; shareUrl: string }) {
   const date = new Intl.DateTimeFormat('pt-BR', { dateStyle: 'long' }).format(new Date(article.publishedAt));
-  const share = (network: string) => {
-    const url = window.location.href;
-    const target = network === 'whatsapp'
-      ? `https://wa.me/?text=${encodeURIComponent(`${article.title} ${url}`)}`
-      : network === 'linkedin'
-        ? `https://www.linkedin.com/sharing/share-offsite/?url=${encodeURIComponent(url)}`
-        : `https://twitter.com/intent/tweet?text=${encodeURIComponent(article.title)}&url=${encodeURIComponent(url)}`;
-    window.open(target, '_blank', 'noopener,noreferrer');
-  };
 
   return <>
     <main className="article-page-wrapper" id="wf-main-content">
@@ -52,7 +36,7 @@ export function ArticleView({ article, related }: { article: NewsArticle; relate
           </header>
           <figure className="article-cover-wrapper">
             {/* eslint-disable-next-line @next/next/no-img-element */}
-            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp'} alt={article.title} />
+            <img className="article-cover-img" src={article.imagePath || '/assets/Fotografias/Grupo Institucional +B/foto-grupo-b-em-fente-fachada_pessoas.webp'} alt={article.title} width={1920} height={1080} loading="eager" decoding="async" fetchPriority="high" />
             <figcaption className="article-cover-caption">Fachada e equipe do Grupo Mais Barato</figcaption>
           </figure>
           <div className="article-content-body">
@@ -74,20 +58,12 @@ export function ArticleView({ article, related }: { article: NewsArticle; relate
             <div className="article-gallery-grid">
               {article.gallery.map((item, index) => <figure className="article-gallery-item" key={`${item.url}-${index}`}>
                 {/* eslint-disable-next-line @next/next/no-img-element */}
-                <img src={item.url} alt={item.alt || `${article.title} — foto ${index + 1}`} loading="lazy" />
+                <img src={item.url} alt={item.alt || `${article.title} — foto ${index + 1}`} width={item.width || 1200} height={item.height || 900} loading="lazy" decoding="async" />
                 {item.caption ? <figcaption>{item.caption}</figcaption> : null}
               </figure>)}
             </div>
           </section> : null}
-          <div className="article-share-section">
-            <h3 className="article-share-title">Compartilhar matéria:</h3>
-            <div className="article-share-buttons">
-              <button type="button" className="btn-share btn-share-whatsapp" onClick={() => share('whatsapp')}><ShareIcon type="whatsapp" /> WhatsApp</button>
-              <button type="button" className="btn-share btn-share-linkedin" onClick={() => share('linkedin')}><ShareIcon type="linkedin" /> LinkedIn</button>
-              <button type="button" className="btn-share btn-share-twitter" onClick={() => share('x')}><ShareIcon type="x" /> X / Twitter</button>
-              <button type="button" className="btn-share btn-share-copy" onClick={async () => { await navigator.clipboard?.writeText(window.location.href); setCopied(true); setTimeout(() => setCopied(false), 1800); }}><ShareIcon type="copy" /> {copied ? 'Link copiado' : 'Copiar Link'}</button>
-            </div>
-          </div>
+          <ArticleShare title={article.title} shareUrl={shareUrl} />
         </div>
       </section>
       <section className="article-related-section" id="article-related-section">
