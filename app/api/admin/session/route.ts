@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { randomBytes } from 'node:crypto';
-import { getRolePermissions, isSecurePassword, isValidAdminEmail, normalizeAdminEmail } from '../../../../lib/admin-access';
+import { getRolePermissions, isSecurePassword, isValidAdminEmail, normalizeAdminEmail, normalizeSessionPermissions, type AdminPermissions } from '../../../../lib/admin-access';
 import { hashAdminPassword, hashSessionToken, verifyAdminPassword } from '../../../../lib/admin-auth-crypto';
 import { CMS_COOKIE, ADMIN_SESSION_MAX_AGE_SECONDS, clearCurrentAdminSession, getBootstrapStatus, getCurrentAdmin, isCmsConfigured, setAdminSessionCookie, verifyLegacyAdminPassword } from '../../../../lib/cms-auth';
 import { db } from '../../../../lib/db';
@@ -8,8 +8,9 @@ import { db } from '../../../../lib/db';
 export const runtime = 'nodejs';
 
 function safeUser(user: NonNullable<Awaited<ReturnType<typeof getCurrentAdmin>>>) {
-  const { id, name, email, role, canManagePosts, canManageSettings, canManageAccess, isActive, mustChangePassword, lastAccessAt, createdAt, updatedAt } = user;
-  return { id, name, email, role, permissions: { posts: canManagePosts, settings: canManageSettings, access: canManageAccess }, isActive, mustChangePassword, lastAccessAt, createdAt, updatedAt };
+  const { id, name, email, role, canManagePosts, canManageSettings, canManageAccess, canManageAnalytics, isActive, mustChangePassword, lastAccessAt, createdAt, updatedAt } = user;
+  const permissions = normalizeSessionPermissions(role, { posts: canManagePosts, settings: canManageSettings, access: canManageAccess, analytics: canManageAnalytics } satisfies AdminPermissions);
+  return { id, name, email, role, permissions, isActive, mustChangePassword, lastAccessAt, createdAt, updatedAt };
 }
 
 async function bootstrapAccount(body: Record<string, unknown>) {
@@ -43,6 +44,7 @@ async function bootstrapAccount(body: Record<string, unknown>) {
           canManagePosts: permissions.posts,
           canManageSettings: permissions.settings,
           canManageAccess: permissions.access,
+          canManageAnalytics: permissions.analytics,
           lastAccessAt: now,
         },
       });

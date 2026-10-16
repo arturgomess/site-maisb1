@@ -1,6 +1,6 @@
 import { cookies } from 'next/headers';
 import { randomBytes, timingSafeEqual } from 'node:crypto';
-import { canGrantPermissions, type AdminPermissions } from './admin-access';
+import { canGrantPermissions, normalizeSessionPermissions, type AdminPermissions } from './admin-access';
 import { hashAdminPassword, hashSessionToken, verifyAdminPassword } from './admin-auth-crypto';
 import { db } from './db';
 
@@ -16,6 +16,7 @@ export type AdminSessionUser = {
   canManagePosts: boolean;
   canManageSettings: boolean;
   canManageAccess: boolean;
+  canManageAnalytics: boolean;
   isActive: boolean;
   mustChangePassword: boolean;
   lastAccessAt: Date | null;
@@ -23,8 +24,8 @@ export type AdminSessionUser = {
   updatedAt: Date;
 };
 
-export function getAdminPermissions(user: Pick<AdminSessionUser, 'canManagePosts' | 'canManageSettings' | 'canManageAccess'>): AdminPermissions {
-  return { posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess };
+export function getAdminPermissions(user: Pick<AdminSessionUser, 'canManagePosts' | 'canManageSettings' | 'canManageAccess' | 'canManageAnalytics'>): AdminPermissions {
+  return { posts: user.canManagePosts, settings: user.canManageSettings, access: user.canManageAccess, analytics: user.canManageAnalytics };
 }
 
 export function verifyLegacyAdminPassword(password: string) {
@@ -79,7 +80,14 @@ export async function getCurrentAdmin(): Promise<AdminSessionUser | null> {
   });
   if (!session || session.expiresAt.getTime() <= Date.now() || !session.user.isActive) return null;
   const { passwordHash: _passwordHash, ...user } = session.user;
-  return user;
+  const permissions = normalizeSessionPermissions(user.role, getAdminPermissions(user));
+  return {
+    ...user,
+    canManagePosts: permissions.posts,
+    canManageSettings: permissions.settings,
+    canManageAccess: permissions.access,
+    canManageAnalytics: permissions.analytics,
+  };
 }
 
 export async function isAdminAuthenticated(permission?: keyof AdminPermissions) {

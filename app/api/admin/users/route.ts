@@ -72,7 +72,7 @@ export async function POST(request: Request) {
       const user = await transaction.adminUser.create({
         data: {
           name, email, passwordHash, role,
-          canManagePosts: permissions.posts, canManageSettings: permissions.settings, canManageAccess: permissions.access,
+          canManagePosts: permissions.posts, canManageSettings: permissions.settings, canManageAccess: permissions.access, canManageAnalytics: permissions.analytics,
         },
       });
       await transaction.adminAuditEvent.create({

@@ -6,10 +6,11 @@ import { CheckCircle2, CircleUserRound, FileText, Filter, KeyRound, LoaderCircle
 import { Button } from '../ui/button';
 import { Card, CardContent } from '../ui/card';
 import { hasFullAdminAccess } from '../../lib/admin-access';
+import type { AdminPermissions } from '../../lib/admin-access';
 
 type AccessUser = {
   id: string; name: string; email: string; role: string; roleLabel: string;
-  permissions: { posts: boolean; settings: boolean; access: boolean };
+  permissions: AdminPermissions;
   isActive: boolean; lastAccessAt: string | null; createdAt: string;
 };
 

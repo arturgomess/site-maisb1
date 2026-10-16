@@ -21,7 +21,6 @@ export async function PATCH(request: Request) {
     defaultTitle: String(body.defaultTitle || '').trim().slice(0, 70),
     defaultDescription: String(body.defaultDescription || '').trim().slice(0, 180),
     defaultKeywords: String(body.defaultKeywords || '').split(',').map((item: string) => item.trim()).filter(Boolean).slice(0, 12),
-    googleAnalyticsId: String(body.googleAnalyticsId || '').trim().slice(0, 30) || null,
     canonicalUrl: String(body.canonicalUrl || '').trim().slice(0, 255) || null,
     ogImage: String(body.ogImage || '').trim().slice(0, 500) || null,
     robotsIndex: body.robotsIndex !== false,
